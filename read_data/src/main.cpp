@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 
     // wtf 照抄就完事了
 	double lon_down, lon_up, lat_down, lat_up;
-	double lon_down0, lon_up0, lat_down0, lat_up0;
+	// double lon_down0, lon_up0, lat_down0, lat_up0;
 	lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 
     // some margin
