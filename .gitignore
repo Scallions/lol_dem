@@ -4,5 +4,6 @@ build/
 
 # MacOS Cache
 .DS_Store
+._.DS_Store
 
 sm-txt/

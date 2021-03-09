@@ -327,7 +327,7 @@ int main(int argc, char** argv)
     // boost::filesystem::path list_path("list.txt")
 
     cout << "++++++++++++++++++++++++++++++" << endl;
-    cout << "       Start read data        " << endl;
+    cout << "       Start crossover        " << endl;
     cout << "++++++++++++++++++++++++++++++" << endl;
 
 	cout << "Finding all file." << endl;
@@ -347,6 +347,7 @@ int main(int argc, char** argv)
 	boost::filesystem::path out_path = dir_path / "out" / "crossover.txt";
 	ofstream result(out_path.string().c_str());	
     int nums = filepaths.size();
+	cout << "Finding crossover." << endl;
 	for(int i=0; i<filepaths.size(); i++){
 		for(int j=i+1; j<filepaths.size(); j++){
 			tag = false;
@@ -354,10 +355,11 @@ int main(int argc, char** argv)
 			if (tag == true){
 				result<< fixed << setprecision(7) << crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
 			}
-            cout << i << "/" << nums << " | " << j << endl;	
 		}
+		cout << "\r" << i << "/" << nums << flush;
 	}
     result.close();
+	cout << endl;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	//system("dir D:\\1111\\data\\in_r /s /b  >filelist.txt");
