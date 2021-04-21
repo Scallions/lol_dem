@@ -84,6 +84,8 @@ def cross_point(A, B, C, D):
     t2 = (x1 * (y2 - y1) + y3 * (x2 - x1) - y1 * (x2 - x1) - x3 * (y2 - y1)) / ((x4 - x3) * (y2 - y1) - (x2 - x1) * (y4 - y3))
     if 0.0 <= t1 <= 1.0 and 0.0 <= t2 <= 1.0:
         ans = [x1 + t1 * (x2 - x1), y1 + t1 * (y2 - y1)]
+    else:
+        return [-1,-1,-1,-1]
     dA = distance_sphere(A[:2], np.array(ans))
     dB = distance_sphere(B[:2], np.array(ans))
     dC = distance_sphere(C[:2], np.array(ans))

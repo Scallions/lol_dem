@@ -14,10 +14,10 @@ DIR = Path("./data/dat/out/")
 aorbits = []
 dorbits = []
 
-for file_ in glob.iglob(os.path.join(DIR,r"lolardr_*_a.txt")): # 匹配数据文件
+for file_ in glob.iglob(os.path.join(DIR,r"lolardr_092060217_*_a.txt")): # 匹配数据文件
     data = tool.read_data(file_).to_numpy()[:,:3]
     aorbits.append(data)
-for file_ in glob.iglob(os.path.join(DIR, r"lolardr_*_d.txt")):
+for file_ in glob.iglob(os.path.join(DIR, r"lolardr_092060217_*_d.txt")):
     data = tool.read_data(file_).to_numpy()[:,:3]
     dorbits.append(data)
 print(f"A: {len(aorbits)} D: {len(dorbits)}")
@@ -28,9 +28,9 @@ l = len(aorbits)
 for i in range(len(dorbits)):
     # dorbits[i][:,2] = i+l
     dorbits[i][:,2] = -1
-aorbits = np.vstack(aorbits)
-dorbits = np.vstack(dorbits)
-orbits = np.vstack([aorbits,dorbits])
+aorbits_ = np.vstack(aorbits)
+dorbits_ = np.vstack(dorbits)
+orbits = np.vstack([aorbits_,dorbits_])
 
 datas = pd.DataFrame(orbits, columns = ["lon","lat","alt"])
 
@@ -49,4 +49,15 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig("figs/morbits.png")  
+fig.savefig("figs/s_scan_gmt.png")  
+
+
+## matplot
+import matplotlib.pyplot as plt 
+
+for orbit in aorbits:
+    plt.plot(orbit[:,0], orbit[:,1])
+for orbit in dorbits:
+    plt.plot(orbit[:,0], orbit[:,1])
+plt.savefig("figs/s_scan_plt.png")
+

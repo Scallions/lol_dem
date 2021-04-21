@@ -36,6 +36,8 @@ for i, (dorbit, dfile) in enumerate(dorbits):
             print(ar, dr, k, l, i, j, afile, dfile)
             print(aorbit[ar][:2], aorbit[ar+1][:2], dorbit[dr][:2], dorbit[dr+1][:2])
             cp = tool.cross_point(aorbit[ar], aorbit[ar+1], dorbit[dr], dorbit[dr+1])
+            if cp[0] == -1:
+                continue
             import matplotlib.pyplot as plt 
             axs = [p[0] for p in aorbit]
             ays = [p[1] for p in aorbit]
