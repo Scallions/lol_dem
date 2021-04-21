@@ -1,10 +1,10 @@
 import pandas as pd 
 import pygmt
 import numpy as np
-
+import tool
 
 file_path = "./data/dat/out/lolardr_092051421_3_d.txt"
-datas = pd.read_csv(file_path, header=None, sep=r",", names=["lon","lat","alt","t1","t2"])
+datas = tool.read_data(file_path)
 fig = pygmt.Figure()
 fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
 # fig.basemap(region=[-90, -70, 0, 20], projection="M8i", frame=True)
