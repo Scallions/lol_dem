@@ -128,16 +128,8 @@ int main(int argc, char** argv)
 
     string dir = argv[1];
 
-    // wtf 照抄就完事了
-	double lon_down, lon_up, lat_down, lat_up;
-	// double lon_down0, lon_up0, lat_down0, lat_up0;
-	lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
+	double lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 
-    // some margin
-	// lon_down0 = lon_down - 0.2;
-	// lon_up0 = lon_up + 0.2;
-	// lat_down0 = lat_down - 0.2;
-	// lat_up0 = lat_up + 0.2;
 
     // boost::filesystem::path dir_path("/home/cyf/Code/Jupyter/lol/dat/out");
     // boost::filesystem::path old_cpath = boost::filesystem::current_path();
@@ -165,42 +157,83 @@ int main(int argc, char** argv)
         // cout << itor->path().extension() << endl;
         if(itor->path().extension() == ".dat") // 找到 dat 数据文件
         {
-            all data_all;
-            real data_real;
+            
             cout << "Reading: " << itor->path() << endl;
-            for(int i=0; i<5; i++)
-            {
-                ifstream dat_stream(itor->path().string().c_str(), ios::binary);    
-                string filename = itor->path().stem().string() + "_" + to_string(i+1) + ".txt";
-                boost::filesystem::path out_path = dir_path / "out" / filename;
-                ofstream out_stream(out_path.string().c_str());
-                bool flag = true; // 删除无数据文件
-                int count = 0; // 统计点数
-                while(dat_stream.read((char*)&data_all, sizeof(data_all)))
-                {
-                    // 读取数据
-                    swap(data_real, data_all);
-                    if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
-                    {
-                        flag = false;
-                        count++;
-                        // cout << "Find: " << itor->path() << endl;
-                        // 如果有在范围内的点 追加到 txt 文件中
-                        out_stream << fixed << setprecision(7)  << data_real.poin[i].lon << " " << data_real.poin[i].lat << " " << data_real.alt[i] << endl; //<< " " << data_real.t1 << " " << data_real.t2 << endl;
-                        // break;
-                    }
-                }
-                // break;
-                if(flag)
-                {
-                    boost::filesystem::remove(out_path.string());
-                }
-                out_stream.clear();
-                out_stream.close();
-                dat_stream.clear();
-                dat_stream.close();
-                cout << i+1 << ": " << count << "   ";
-            }
+
+			ifstream dat_stream(itor->path().string().c_str(), ios::binary);
+            vector<ofstream> out_streams(10);
+			vector<boost::filesystem::path> out_paths(10);
+			// open stream
+			for(int i=0; i<5; ++i){
+				string afilename = itor->path().stem().string() + "_" + to_string(i+1) + "_a.txt";
+				string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + "_d.txt";
+                boost::filesystem::path aout_path = dir_path / "out" / afilename;
+				boost::filesystem::path dout_path = dir_path / "out" / dfilename;
+				out_streams[i<<1].open(dout_path.string().c_str());
+				out_streams[i<<1|1].open(aout_path.string().c_str());
+				out_paths[i<<1] = dout_path;
+				out_paths[i<<1|1] = aout_path;
+
+			}
+
+			// read data
+			all data_all;
+            real data_real;
+			vector<int> counts(5); 
+			vector<vector<single_real>> reals(5, vector<single_real>());
+			vector<int> midxs(5,0);
+			while(dat_stream.read((char*)&data_all, sizeof(data_all)))
+			{
+				// 读取数据
+				swap(data_real, data_all);
+				for(int i=0;i<5;++i){
+					if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
+					{
+						reals[i].push_back({data_real.poin[i], data_real.alt[i], counts[i], data_real.t1, data_real.t2});
+						if(reals[i][midxs[i]].p.lat > data_real.poin[i].lat){
+							midxs[i] = counts[i];
+						}
+						++counts[i];
+					}
+				}
+			}
+
+			// write data
+			for(int i=0; i<5; ++i){
+				int n = reals[i].size();
+				if(n<100) continue;
+				for(int j = 0;j<n;++j){
+					if(j<midxs[i]){
+						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << "," << reals[i][j].p.lat << "," << reals[i][j].alt << "," << reals[i][j].t1 <<","<<reals[i][j].t2<< endl;						
+					}else{
+						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << "," << reals[i][j].p.lat << "," << reals[i][j].alt << "," << reals[i][j].t1 <<","<<reals[i][j].t2<< endl;						
+					}
+				}
+			}
+
+			// close stream
+			for(int i=0; i<5; ++i){
+				#ifdef DEBUG 
+					if(counts[i] > 100)
+						cout << "DEBUG: read: " << i << " " << counts[i] << " " << midxs[i] << endl;
+				#endif
+				out_streams[i<<1].clear();
+				out_streams[i<<1|1].clear();
+				out_streams[i<<1].close();
+				out_streams[i<<1|1].close();
+				if(counts[i] < 100){
+					boost::filesystem::remove(out_paths[i<<1]);
+					boost::filesystem::remove(out_paths[i<<1|1]);
+				}
+				if(midxs[i] == 0){
+					boost::filesystem::remove(out_paths[i<<1|1]);
+				}
+				if(midxs[i] == counts[i]){
+					boost::filesystem::remove(out_paths[i<<1]);
+				}
+			}
+			dat_stream.clear();
+			dat_stream.close();
             cout << endl;
         }
 

@@ -4,6 +4,9 @@ some code about moon dem ( T T )
 
 计划采用偏差倾斜式轨道误差，由于是月球测高，地面误差不过多考虑
 
+altimeter data:
+- http://pds-geosciences.wustl.edu/
+
 计划的技术栈
 - GSL： 科学计算库
 - boost： 文件处理
@@ -11,3 +14,6 @@ some code about moon dem ( T T )
 - python： 数据爬取
 - pygmt： 数据可视化
 - 克里金插值生成格网数据
+
+some docs:
+- https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/catalog/rdr_ds.cat
