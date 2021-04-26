@@ -1,0 +1,45 @@
+import pandas as pd 
+import pygmt
+import numpy as np
+import glob
+from pathlib import Path
+import os
+
+import tool
+
+DIR = Path("./data/test/out/")
+
+
+files = set()
+
+for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.txt")): 
+    files.add(file_[:-8]) 
+
+
+def fuse_fun(x):
+    x = x.sort_values(by = 'alt')
+    if len(x) > 3:
+        return x[1:-1].mean()
+    return x.mean()
+
+## fuse
+for file_ in files:
+    data = pd.DataFrame(columns=["lon","lat","alt","t1","t2"])
+    data[['t1','t2']] = data[['t1','t2']].astype(int)
+    for i in range(1,6):
+        if os.path.exists(f"{file_}_{i}_a.txt"):
+            temp = tool.read_data(f"{file_}_{i}_a.txt")
+            data = pd.concat([data, temp])
+    if len(data) != 0:
+        data = data.groupby(['t1','t2']).apply(fuse_fun)
+        data.to_csv(file_+"_a.csv")
+
+    data = pd.DataFrame(columns=["lon","lat","alt","t1","t2"])
+    data[['t1','t2']] = data[['t1','t2']].astype(int)
+    for i in range(1,6):
+        if os.path.exists(f"{file_}_{i}_d.txt"):
+            temp = tool.read_data(f"{file_}_{i}_d.txt")
+            data = pd.concat([data, temp])
+    if len(data) != 0:
+        data = data.groupby(['t1','t2']).apply(fuse_fun)
+        data.to_csv(file_+"_d.csv")

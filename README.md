@@ -17,3 +17,11 @@ altimeter data:
 
 some docs:
 - https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/catalog/rdr_ds.cat
+
+
+some key data description
+- 10-12m apart along track
+- 5m diameter observation area
+- 20m FOV
+- profiles 10-12m apart
+- 50m two sample

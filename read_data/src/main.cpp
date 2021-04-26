@@ -94,6 +94,12 @@ void swap(real &e, all  d)      //将读取结果转换为BLH
 
 		e.poin[i].lat = (double)d.b[i].latitude / (double)1E7;
 		e.alt[i] = d.b[i].radius / (double)1E6 - d.a.selenoid_radius / (double)1E6; //double(1737.4);
+		// if(e.alt[i] < -1000 && d.b[i].range != UINT32_MAX){
+		// 	// cout<<d.b[i].radius<< " " << d.a.selenoid_radius << " " << d.b[i].range << " " << d.a.sc_radius<<endl;
+		// 	// cout<<e.alt[i]<< " ";
+		// 	e.alt[i] = (d.a.sc_radius - d.a.selenoid_radius) / (double)1E6 - d.b[i].range / (double)1E6;
+		// 	// cout<<e.alt[i]<<endl;
+		// }
 		e.t1 = d.a.transmit_time_seconds;
 		e.t2 = d.a.transmit_time_fraction;
 		e.flag[i] = d.b[i].shot_flag;
@@ -155,7 +161,7 @@ int main(int argc, char** argv)
     {
         // 遍历文件夹
         // cout << itor->path().extension() << endl;
-        if(itor->path().extension() == ".dat") // 找到 dat 数据文件
+        if(itor->path().extension() == ".DAT") // 找到 dat 数据文件
         {
             
             cout << "Reading: " << itor->path() << endl;
@@ -187,8 +193,8 @@ int main(int argc, char** argv)
 				// 读取数据
 				swap(data_real, data_all);
 				for(int i=0;i<5;++i){
-					if(in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
-					// if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
+					// if(in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
+					if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
 					{
 						reals[i].push_back({data_real.poin[i], data_real.alt[i], counts[i], data_real.t1, data_real.t2});
 						if(reals[i][midxs[i]].p.lat > data_real.poin[i].lat){
@@ -222,6 +228,7 @@ int main(int argc, char** argv)
 				out_streams[i<<1|1].clear();
 				out_streams[i<<1].close();
 				out_streams[i<<1|1].close();
+				// quailty control remove some file
 				if(counts[i] < 100){
 					boost::filesystem::remove(out_paths[i<<1]);
 					boost::filesystem::remove(out_paths[i<<1|1]);

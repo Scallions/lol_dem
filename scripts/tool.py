@@ -4,8 +4,8 @@ import numpy as np
 
 ZERO = 1e-9
 
-def read_data(file_path):
-    return pd.read_csv(file_path, header=None, sep=r",", names=["lon","lat","alt","t1","t2"])
+def read_data(file_path, header=None):
+    return pd.read_csv(file_path, header=header, sep=r",", names=["lon","lat","alt","t1","t2"],dtype = {'t1': int, 't2': int})
 
 
 def vector_product(p1, p2):
@@ -24,6 +24,8 @@ def is_intersected(A, B, C, D):
         and (vector_product(CA, CB) * vector_product(DA, DB) <= ZERO)
 
 def find_crossover(aorbit, dorbit, a1, a2, d1, d2):
+    if a1 == a2 or d1 == d2:
+        return -1, -1
     if not is_intersected(aorbit[a1], aorbit[a2], dorbit[d1], dorbit[d2]):
         return -1,-1
     if a1+1 == a2 and d1+1 == d2:

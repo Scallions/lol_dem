@@ -9,17 +9,25 @@ import tool
 
 # file_path = "./data/dat/out/lolardr_092051421_3_d.txt"
 # datas = tool.read_data(file_path)
-DIR = Path("./data/dat/out/")
+DIR = Path("./data/test/out/")
 
 aorbits = []
 dorbits = []
 
-for file_ in glob.iglob(os.path.join(DIR,r"lolardr_*_a.txt")): # 匹配数据文件
-    data = tool.read_data(file_).to_numpy()[:,:3]
+# for file_ in glob.iglob(os.path.join(DIR,r"lolardr_*_a.txt")): # 匹配数据文件
+#     data = tool.read_data(file_).to_numpy()[:,:3]
+#     aorbits.append(data)
+# for file_ in glob.iglob(os.path.join(DIR, r"lolardr_*_d.txt")):
+#     data = tool.read_data(file_).to_numpy()[:,:3]
+#     dorbits.append(data)
+
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a.csv")):
+    data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
     aorbits.append(data)
-for file_ in glob.iglob(os.path.join(DIR, r"lolardr_*_d.txt")):
-    data = tool.read_data(file_).to_numpy()[:,:3]
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d.csv")):
+    data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
     dorbits.append(data)
+
 print(f"A: {len(aorbits)} D: {len(dorbits)}")
 for i in range(len(aorbits)):
     # aorbits[i][:,2] = i
