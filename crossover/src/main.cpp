@@ -19,6 +19,7 @@ using namespace std;
 struct point
 {
 	double lon, lat, alt;
+	int i,j;
 };
 
 struct line_p2{
@@ -262,6 +263,7 @@ point calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
 				point p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
+				p_r.i = i, p_r.j = j;
 				p_r.alt = insert_h(l1[i], l1[i + 1], p_r) - insert_h(l2[j], l2[j + 1], p_r);
 				return p_r;
 			}			
@@ -353,7 +355,7 @@ int main(int argc, char** argv)
 			tag = false;
 			crossover = get_crossover(filepaths[i], filepaths[j], tag);
 			if (tag == true){
-				result<< fixed << setprecision(7) << crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
+				result<< fixed << setprecision(7) << filepaths[i] <<" "<< filepaths[j]<<" " <<i<<" "<<j<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
 			}
 		}
 		cout << "\r" << i << "/" << nums << flush;

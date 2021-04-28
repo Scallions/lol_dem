@@ -134,8 +134,10 @@ int main(int argc, char** argv)
 
     string dir = argv[1];
 
-	double lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 
+	// double lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
+	// shoemaker
+	double lon_down = 36.285536, lon_up = 49.296789, lat_down = -86.9, lat_up = -85.1;
 
     // boost::filesystem::path dir_path("/home/cyf/Code/Jupyter/lol/dat/out");
     // boost::filesystem::path old_cpath = boost::filesystem::current_path();
@@ -210,10 +212,10 @@ int main(int argc, char** argv)
 				int n = reals[i].size();
 				if(n<100) continue;
 				for(int j = 0;j<n;++j){
-					if(j<midxs[i]){
-						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << "," << reals[i][j].p.lat << "," << reals[i][j].alt << "," << reals[i][j].t1 <<","<<reals[i][j].t2<< endl;						
+					if(j<=midxs[i]){
+						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" "<<reals[i][j].t2<< endl;						
 					}else{
-						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << "," << reals[i][j].p.lat << "," << reals[i][j].alt << "," << reals[i][j].t1 <<","<<reals[i][j].t2<< endl;						
+						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" "<<reals[i][j].t2<< endl;						
 					}
 				}
 			}
@@ -233,10 +235,10 @@ int main(int argc, char** argv)
 					boost::filesystem::remove(out_paths[i<<1]);
 					boost::filesystem::remove(out_paths[i<<1|1]);
 				}
-				if(midxs[i] == 0){
+				if(midxs[i] <= 5){
 					boost::filesystem::remove(out_paths[i<<1|1]);
 				}
-				if(midxs[i] == counts[i]){
+				if(midxs[i] >= counts[i] - 5){
 					boost::filesystem::remove(out_paths[i<<1]);
 				}
 			}

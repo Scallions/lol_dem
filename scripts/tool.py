@@ -5,7 +5,7 @@ import numpy as np
 ZERO = 1e-9
 
 def read_data(file_path, header=None):
-    return pd.read_csv(file_path, header=header, sep=r",", names=["lon","lat","alt","t1","t2"],dtype = {'t1': int, 't2': int})
+    return pd.read_csv(file_path, header=header, sep=r"\s+", names=["lon","lat","alt","t1","t2"],dtype = {'t1': int, 't2': int})
 
 
 def vector_product(p1, p2):

@@ -14,10 +14,10 @@ DIR = Path("./data/dat/out/")
 aorbits = []
 dorbits = []
 
-for file_ in glob.iglob(os.path.join(DIR,r"lolardr_092060217_*_a.txt")): # 匹配数据文件
+for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_092060217_*_a.txt")): # 匹配数据文件
     data = tool.read_data(file_).to_numpy()[:,:3]
     aorbits.append(data)
-for file_ in glob.iglob(os.path.join(DIR, r"lolardr_092060217_*_d.txt")):
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_092060217_*_d.txt")):
     data = tool.read_data(file_).to_numpy()[:,:3]
     dorbits.append(data)
 print(f"A: {len(aorbits)} D: {len(dorbits)}")

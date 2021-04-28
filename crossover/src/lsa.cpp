@@ -1,7 +1,7 @@
 // 求解交叉点坐标及高程.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+// #include "stdafx.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>

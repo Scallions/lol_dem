@@ -1,3 +1,6 @@
+# Plot all orbit
+
+
 import pandas as pd 
 import pygmt
 import numpy as np
@@ -21,10 +24,10 @@ dorbits = []
 #     data = tool.read_data(file_).to_numpy()[:,:3]
 #     dorbits.append(data)
 
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a.csv")):
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a_filter.csv")):
     data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
     aorbits.append(data)
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d.csv")):
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d_filter.csv")):
     data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
     dorbits.append(data)
 
@@ -43,7 +46,8 @@ orbits = np.vstack([aorbits,dorbits])
 datas = pd.DataFrame(orbits, columns = ["lon","lat","alt"])
 
 fig = pygmt.Figure()
-fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+# fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+fig.basemap(region=[36.285536, 49.296789, -86.9, -85.1], projection="L42/-86/-85/-87/5i", frame=True)
 # fig.basemap(region=[-90, -70, 0, 20], projection="M8i", frame=True)
 pygmt.makecpt(cmap="geo", series=[datas.alt.min()-1, datas.alt.max()+1])
 fig.plot(
