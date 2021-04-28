@@ -25,3 +25,12 @@ some key data description
 - 20m FOV
 - profiles 10-12m apart
 - 50m two sample
+
+normal without header and line index
+file format:
+- *.DAT: binary data file
+- *.[A|D]R: txt raw data file 
+- *.[A|D]F: fuse data file
+- *.[A|D]O: remove outlier
+- *.[A|D]OF: fuse remove outlier
+- *.[A|D]C: after crossover adj

@@ -31,24 +31,31 @@ def read_data(file_path):
     return df
 
 def filter(data):
-    res = KMeans(n_clusters=2).fit(data[["dh1","dh2"]].abs()) 
-#     res = AgglomerativeClustering(n_clusters=2).fit(data[["dh1","dh2"]].abs())
-    # yhat = IsolationForest(contamination=0.03).fit_predict(data[["dh1","dh2"]].abs())
-#     res = OPTICS().fit(data[["dh1","dh2"]].abs())
-#     data["label"] = res.labels_
-    one_len = (res.labels_ == 1).sum()
-    zero_len = (res.labels_ == 0).sum()
-    if one_len > zero_len:
-        data["label"] = (res.labels_ == 1)
-    else:
-        data["label"] = (res.labels_ == 0)
+    for i in range(3):
+        res = KMeans(n_clusters=2).fit(data[["dh1","dh2"]].abs()) 
+    #     res = AgglomerativeClustering(n_clusters=2).fit(data[["dh1","dh2"]].abs())
+        # yhat = IsolationForest(contamination=0.03).fit_predict(data[["dh1","dh2"]].abs())
+    #     res = OPTICS().fit(data[["dh1","dh2"]].abs())
+    #     data["label"] = res.labels_
+        one_len = (res.labels_ == 1).sum()
+        zero_len = (res.labels_ == 0).sum()
+        if one_len > zero_len:
+            data = data[res.labels_ == 1]
+        else:
+            data = data[res.labels_ == 0]
+        # print(i, len(data))
     return data
 
 #### 定义txt文件目录
 DIR = Path("./data/test/out/")
 # datas = None
-for file_ in glob.iglob(os.path.join(DIR,r"*.txt")): # 匹配数据文件
+for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*_a.txt")): # 匹配数据文件
     data = read_data(file_)
     data = filter(data)
-    data[data["label"] == True][["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-4]}_filter.csv")
+    data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-4]}.AO", sep=" ", header = 0, index=0)
+    
+for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*_d.txt")): # 匹配数据文件
+    data = read_data(file_)
+    data = filter(data)
+    data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-4]}.DO", sep=" ", header = 0, index=0)
     

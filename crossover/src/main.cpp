@@ -19,8 +19,15 @@ using namespace std;
 struct point
 {
 	double lon, lat, alt;
+	int t1,t2;
+};
+
+struct crosspoint
+{
+	double lon, lat, alt1, alt2;
 	int i,j;
 };
+
 
 struct line_p2{
 	string filename;
@@ -260,10 +267,11 @@ point calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin
 
 	for (int i = begin1; i < end1; i++){
 		for (int j = begin2; j < end2; j++){
+			if(l1[i+1].t1 - l1[i].t1 > 1 || l2[j+1].t1 - l2[j].t1 > 1) break;
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
 				point p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
-				p_r.i = i, p_r.j = j;
+				p_r.t1 = i, p_r.t2 = j;
 				p_r.alt = insert_h(l1[i], l1[i + 1], p_r) - insert_h(l2[j], l2[j + 1], p_r);
 				return p_r;
 			}			
@@ -285,12 +293,13 @@ point get_crossover(string f1, string f2, bool & tag){// if find crossover set t
 
 	point tem;
 	ifstream ff1(f1.c_str());
-	while (ff1 >> tem.lon >> tem.lat >> tem.alt)
+	int t;
+	while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
 		l1.push_back(tem);
 	ff1.close();
 
 	ifstream ff2(f2.c_str());
-	while (ff2 >> tem.lon >> tem.lat >> tem.alt)
+	while (ff2 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
 		l2.push_back(tem);
 	ff2.close();
 
@@ -333,29 +342,34 @@ int main(int argc, char** argv)
     cout << "++++++++++++++++++++++++++++++" << endl;
 
 	cout << "Finding all file." << endl;
-	vector<string> filepaths;
+	vector<string> afilepaths;
+	vector<string> dfilepaths;
     boost::filesystem::recursive_directory_iterator itEnd;
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
     {
         // 遍历文件夹
         // cout << itor->path().extension() << endl;
-        if((itor->path().extension() == ".txt") && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
+        if((itor->path().extension() == ".AO") && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
-			filepaths.push_back(itor->path().string());
+			afilepaths.push_back(itor->path().string());
+		}
+		if((itor->path().extension() == ".DO") && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
+        {
+			dfilepaths.push_back(itor->path().string());
 		}
 	}
 	bool tag;
 	point crossover;
 	boost::filesystem::path out_path = dir_path / "out" / "crossover.txt";
 	ofstream result(out_path.string().c_str());	
-    int nums = filepaths.size();
+    int nums = afilepaths.size();
 	cout << "Finding crossover." << endl;
-	for(int i=0; i<filepaths.size(); i++){
-		for(int j=i+1; j<filepaths.size(); j++){
+	for(int i=0; i<afilepaths.size(); i++){
+		for(int j=0; j<dfilepaths.size(); j++){
 			tag = false;
-			crossover = get_crossover(filepaths[i], filepaths[j], tag);
+			crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
 			if (tag == true){
-				result<< fixed << setprecision(7) << filepaths[i] <<" "<< filepaths[j]<<" " <<i<<" "<<j<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
+				result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.t1<<" "<<crossover.t2<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
 			}
 		}
 		cout << "\r" << i << "/" << nums << flush;

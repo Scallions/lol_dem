@@ -16,13 +16,12 @@ FUSE = False
 aorbits = []
 dorbits = []
 
-if not FUSE:
-    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*_a.txt")): # 匹配数据文件
-        data = tool.read_data(file_).to_numpy()
+if FUSE:
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a.csv")):
+        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
         aorbits.append((data, file_))
-
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d.txt")):
-        data = tool.read_data(file_).to_numpy()
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d.csv")):
+        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
         dorbits.append((data, file_))
 else:
     for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a_filter.csv")):
@@ -54,7 +53,7 @@ for dorbit, file_ in dorbits:
     plt.plot(dxs, dys, color='b', label="D")
 
 
-PY = True
+PY = False
 ### find cross over point
 if PY:
     count = 0
@@ -70,24 +69,34 @@ if PY:
                 count += 1
                 cp = tool.cross_point(aorbit[ar], aorbit[ar+1], dorbit[dr], dorbit[dr+1])
                 if cp[0] == -1:
+                    print(aorbit[ar][:2], aorbit[ar+1][:2], dorbit[dr][:2], dorbit[dr+1][:2], afile, dfile)
+                    plt.scatter(float(aorbit[ar][0]), float(aorbit[ar][1]), color='y')
                     continue
                 plt.scatter(cp[0], cp[1], color='g')
-                print(cp[2],cp[3])
+                # print(cp[2],cp[3])
                 dhs.append(cp[2:])
+    plt.savefig("figs/crossover.png")
+
+    plt.close()
+    dhs = np.array(dhs)
+    print(len(dhs), count)
+    plt.hist(dhs[:,0] - dhs[:,1], bins=100)
+    plt.savefig("figs/cs_hist.png")
+    print(np.abs(dhs[:,0] - dhs[:,1]).mean())
+    # print((dhs[:,0] - dhs[:,1]).mean())
+    dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.008,:]
+    print("MAE: ",np.abs(dhs[:,0] - dhs[:,1]).mean())  
 else:
-    cross = pd.read_csv(os.path.join(DIR,"crossover.txt"), header=None, columns=["f1","f2","c1","c2","lon","lat","alt"])
-    plt.scatter()
+    cross = pd.read_csv(os.path.join(DIR,"crossover.txt"), header=None, names=["f1","f2","c1","c2","lon","lat","alt"], sep=r"\s+")
+    plt.scatter(cross["lon"], cross["lat"], color='g')
+    plt.savefig("figs/crossover.png")
+    plt.close()
+    plt.hist(cross["alt"], bins=100)
+    plt.savefig("figs/cs_hist.png")
+    print("MAE: ", cross["alt"].abs().mean())
+    print("STD: ", cross["alt"].std())
+    cross["dlt"] = cross["alt"].abs()
+    print(cross.sort_values("dlt", ascending=False).head())
 
-plt.savefig("figs/crossover.png")
-
-            
-
-dhs = np.array(dhs)
-print(len(dhs), count)
-plt.close()
-plt.hist(dhs[:,0] - dhs[:,1], bins=20)
-plt.savefig("figs/cs_hist.png")
-print(np.abs(dhs[:,0] - dhs[:,1]).mean())
-# print((dhs[:,0] - dhs[:,1]).mean())
-dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.01,:]
-print(np.abs(dhs[:,0] - dhs[:,1]).mean())
+     
+    
