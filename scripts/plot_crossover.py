@@ -87,7 +87,7 @@ if PY:
     dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.008,:]
     print("MAE: ",np.abs(dhs[:,0] - dhs[:,1]).mean())  
 else:
-    cross = pd.read_csv(os.path.join(DIR,"crossover.txt"), header=None, names=["f1","f2","c1","c2","lon","lat","alt"], sep=r"\s+")
+    cross = pd.read_csv(os.path.join(DIR,"crossoverC.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.scatter(cross["lon"], cross["lat"], color='g')
     plt.savefig("figs/crossover.png")
     plt.close()

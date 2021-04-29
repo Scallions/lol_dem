@@ -13,8 +13,8 @@ struct first
 {
 	int met_seconds;
 	unsigned int subseconds;
-	int transmit_time_seconds;
-	int transmit_time_fraction;
+	unsigned int transmit_time_seconds;
+	unsigned int transmit_time_fraction;
 	int laser_energy;
 	int transmit_width;
 	int sc_longitude;
@@ -64,7 +64,7 @@ struct area
 };
 struct real
 {
-	int t1, t2;
+	unsigned int t1, t2;
 	double alt[5];
 	point poin[5];
 	int flag[5];
@@ -75,7 +75,7 @@ struct single_real
 	point p;
 	double alt;
 	int num;
-	int t1, t2;
+	unsigned int t1, t2;
 
 };
 
@@ -173,8 +173,8 @@ int main(int argc, char** argv)
 			vector<boost::filesystem::path> out_paths(10);
 			// open stream
 			for(int i=0; i<5; ++i){
-				string afilename = itor->path().stem().string() + "_" + to_string(i+1) + "_a.txt";
-				string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + "_d.txt";
+				string afilename = itor->path().stem().string() + "_" + to_string(i+1) + ".AR";
+				string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + ".DR";
                 boost::filesystem::path aout_path = dir_path / "out" / afilename;
 				boost::filesystem::path dout_path = dir_path / "out" / dfilename;
 				out_streams[i<<1].open(dout_path.string().c_str());
@@ -213,9 +213,9 @@ int main(int argc, char** argv)
 				if(n<100) continue;
 				for(int j = 0;j<n;++j){
 					if(j<=midxs[i]){
-						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" "<<reals[i][j].t2<< endl;						
+						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" " << reals[i][j].t2/153390080<< endl;						
 					}else{
-						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" "<<reals[i][j].t2<< endl;						
+						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 << " " <<reals[i][j].t2/153390080<< endl;						
 					}
 				}
 			}

@@ -25,6 +25,7 @@ struct point
 struct crosspoint
 {
 	double lon, lat, alt1, alt2;
+	double ta, td;
 	int i,j;
 };
 
@@ -128,10 +129,10 @@ bool in_rectangle(double lon, double lat, double lon_down, double lon_up, double
 		return false;
 }
 
-point intersection(point u1, point u2, point v1, point v2)                 //?????????
+crosspoint intersection(point u1, point u2, point v1, point v2)                 //?????????
 {
     // find intersection point
-	point ret;
+	crosspoint ret;
 	ret.lon = -999;
 	ret.lat = -999;
 	double t = ((u1.lon - v1.lon)*(v1.lat - v2.lat) - (u1.lat - v1.lat)*(v1.lon - v2.lon))
@@ -142,19 +143,25 @@ point intersection(point u1, point u2, point v1, point v2)                 //???
 }
 
 double distan(point a, point b){
-	double d = sqrt((a.lat - b.lat)*(a.lat - b.lat) + (a.lon - b.lon)*(a.lon - b.lon));
+	// np.arccos(np.cos(p1[1]) * np.cos(p2[1]) * np.cos(p1[0] - p2[0]) + np.sin(p1[1])*np.sin(p2[1]))
+	// acos(cos(a.lat) * cos(b.lat) * cos(a.lon - b.lon) + sin(a.lat) * sin(b.lat))
+	// double d = sqrt((a.lat - b.lat)*(a.lat - b.lat) + (a.lon - b.lon)*(a.lon - b.lon));
+	double t = 3.1415926/180;
+	double d = acos(cos(a.lat*t) * cos(b.lat*t) * cos(a.lon*t - b.lon*t) + sin(a.lat*t) * sin(b.lat*t));
 	return d;
 }
 
-double insert_h(point r1, point r2, point p){
+double insert_h(point r1, point r2, crosspoint& p_r){
     // insert height with distance weight
-	double d1 = distan(p, r1);
-	double d2 = distan(p, r2);
+	point p_t = {p_r.lon, p_r.lat,0};
+	double d1 = distan(p_t, r1);
+	double d2 = distan(p_t, r2);
 	double h = d1*r1.alt / (d1 + d2) + d2*r2.alt / (d1 + d2);
+	// set time
 	return h;
 }
 
-point calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin1, int end1, int begin2, int end2, bool &tag){
+crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin1, int end1, int begin2, int end2, bool &tag){
     /*
     l1 : line1 point
     l2 : line2 point
@@ -168,7 +175,7 @@ point calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin
 	int gap1, gap2;
     if(end1 < 2 || end2 < 2){
         // cout << "error" << endl;
-        point p_w = { -999, -999, -999 };
+        crosspoint p_w = { -999, -999, -999 };
         return p_w;
     }
 	int num = 0;
@@ -270,20 +277,28 @@ point calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin
 			if(l1[i+1].t1 - l1[i].t1 > 1 || l2[j+1].t1 - l2[j].t1 > 1) break;
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
-				point p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
-				p_r.t1 = i, p_r.t2 = j;
-				p_r.alt = insert_h(l1[i], l1[i + 1], p_r) - insert_h(l2[j], l2[j + 1], p_r);
+				crosspoint p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
+				p_r.i = i, p_r.j = j;
+				point p_t = {p_r.lon, p_r.lat,0};
+				p_r.alt1 = insert_h(l1[i], l1[i + 1], p_r);
+				p_r.alt2 = insert_h(l2[j], l2[j + 1], p_r);
+				double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
+				double dtd = (p_r.alt1 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
+				double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
+				double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
+				p_r.ta = ta;
+				p_r.td = td;
 				return p_r;
 			}			
 		}
 	}
 	// cout << "error" << endl;
-	point p_w = { -999, -999, -999 };
+	crosspoint p_w = { -999, -999, -999 , -1, -1, -1};
 	return p_w;
 
 }
 
-point get_crossover(string f1, string f2, bool & tag){// if find crossover set tage to true and return point
+crosspoint get_crossover(string f1, string f2, bool & tag){// if find crossover set tage to true and return point
 	// cout << f1 << " " << f2 << endl;
 
 	tag = false;
@@ -303,7 +318,7 @@ point get_crossover(string f1, string f2, bool & tag){// if find crossover set t
 		l2.push_back(tem);
 	ff2.close();
 
-	//cout << l1.size() - 1 << " " << l2.size() - 1 << endl;
+	// cout << l1.size() - 1 << " " << l2.size() - 1 << endl;
 
 	return calc_crossover(l1, l2,0,l1.size()-1,0,l2.size()-1, tag);
 
@@ -316,13 +331,15 @@ int main(int argc, char** argv)
     lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 	string  filename;
 
-    if(argc!=2)
+    if(argc<2)
     {
         cout << "Usage:" << endl;
-        cout << "   ./crossover <dat_dir>" << endl;
+        cout << "   ./crossover <dat_dir> [O]" << endl;
         return 1;
     }
 	string dir = argv[1];
+	string ext = argc==3?argv[2]:"O";
+
 
     boost::filesystem::path dir_path(dir);
     // dir_path = old_cpath / dir_path;
@@ -349,18 +366,18 @@ int main(int argc, char** argv)
     {
         // 遍历文件夹
         // cout << itor->path().extension() << endl;
-        if((itor->path().extension() == ".AO") && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
+        if((itor->path().extension() == ".A"+ext) && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
 			afilepaths.push_back(itor->path().string());
 		}
-		if((itor->path().extension() == ".DO") && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
+		if((itor->path().extension() == ".D"+ext) && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
 			dfilepaths.push_back(itor->path().string());
 		}
 	}
 	bool tag;
-	point crossover;
-	boost::filesystem::path out_path = dir_path / "out" / "crossover.txt";
+	crosspoint crossover;
+	boost::filesystem::path out_path = dir_path / "out" / ("crossover" + ext + ".txt");
 	ofstream result(out_path.string().c_str());	
     int nums = afilepaths.size();
 	cout << "Finding crossover." << endl;
@@ -368,8 +385,9 @@ int main(int argc, char** argv)
 		for(int j=0; j<dfilepaths.size(); j++){
 			tag = false;
 			crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
+			// if( abs(crossover.alt1 - crossover.alt2) > 0.01) continue;
 			if (tag == true){
-				result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.t1<<" "<<crossover.t2<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
+				result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
 			}
 		}
 		cout << "\r" << i << "/" << nums << flush;

@@ -12,8 +12,8 @@ DIR = Path("./data/test/out/")
 
 files = set()
 
-for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.txt")): 
-    files.add(file_[:-8]) 
+for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.[AD]R")): 
+    files.add(file_[:-5]) 
 
 
 def fuse_fun(x):
@@ -27,19 +27,21 @@ for file_ in files:
     data = pd.DataFrame(columns=["lon","lat","alt","t1","t2"])
     data[['t1','t2']] = data[['t1','t2']].astype(int)
     for i in range(1,6):
-        if os.path.exists(f"{file_}_{i}_a.txt"):
-            temp = tool.read_data(f"{file_}_{i}_a.txt")
+        if os.path.exists(f"{file_}_{i}.AR"):
+            temp = tool.read_data(f"{file_}_{i}.AR")
             data = pd.concat([data, temp])
     if len(data) != 0:
         data = data.groupby(['t1','t2']).apply(fuse_fun)
-        data.to_csv(file_+"_a.csv")
+        data[['t1','t2']] = data[['t1','t2']].astype("int")
+        data.to_csv(file_+".AF", header=0, index=0, sep=" ", float_format="%.7f")
 
     data = pd.DataFrame(columns=["lon","lat","alt","t1","t2"])
     data[['t1','t2']] = data[['t1','t2']].astype(int)
     for i in range(1,6):
-        if os.path.exists(f"{file_}_{i}_d.txt"):
-            temp = tool.read_data(f"{file_}_{i}_d.txt")
+        if os.path.exists(f"{file_}_{i}.DR"):
+            temp = tool.read_data(f"{file_}_{i}.DR")
             data = pd.concat([data, temp])
     if len(data) != 0:
         data = data.groupby(['t1','t2']).apply(fuse_fun)
-        data.to_csv(file_+"_d.csv")
+        data[['t1','t2']] = data[['t1','t2']].astype("int")
+        data.to_csv(file_+".DF", header=0, index=0, sep=" ", float_format="%.7f")
