@@ -166,7 +166,7 @@ int main(int argc, char** argv)
         if(itor->path().extension() == ".DAT") // 找到 dat 数据文件
         {
             
-            cout << "Reading: " << itor->path() << endl;
+            // cout << "Reading: " << itor->path() << endl;
 
 			ifstream dat_stream(itor->path().string().c_str(), ios::binary);
             vector<ofstream> out_streams(10);
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
 			}
 			dat_stream.clear();
 			dat_stream.close();
-            cout << endl;
+            // cout << endl;
         }
 
     }

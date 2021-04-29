@@ -17,18 +17,18 @@ aorbits = []
 dorbits = []
 
 if FUSE:
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a.csv")):
-        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AF")):
+        data = tool.read_data(file_)[['lon','lat','alt']].to_numpy()
         aorbits.append((data, file_))
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d.csv")):
-        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DF")):
+        data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
         dorbits.append((data, file_))
 else:
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_a_filter.csv")):
-        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AR")):
+        data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
         aorbits.append((data, file_))
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*_d_filter.csv")):
-        data = pd.read_csv(file_)[['lon','lat','alt']].to_numpy()
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DR")):
+        data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
         dorbits.append((data, file_))
 
 print(f"ascend orbits: {len(aorbits)}, dscend orbits: {len(dorbits)}")
@@ -87,12 +87,20 @@ if PY:
     dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.008,:]
     print("MAE: ",np.abs(dhs[:,0] - dhs[:,1]).mean())  
 else:
-    cross = pd.read_csv(os.path.join(DIR,"crossoverC.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
+    cross = pd.read_csv(os.path.join(DIR,"crossoverO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.scatter(cross["lon"], cross["lat"], color='g')
     plt.savefig("figs/crossover.png")
     plt.close()
     plt.hist(cross["alt"], bins=100)
     plt.savefig("figs/cs_hist.png")
+    plt.close()
+    print("MAE: ", cross["alt"].abs().mean())
+    print("STD: ", cross["alt"].std())
+    cross["dlt"] = cross["alt"].abs()
+    print(cross.sort_values("dlt", ascending=False).head())
+    cross = pd.read_csv(os.path.join(DIR,"crossoverC.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
+    plt.hist(cross["alt"], bins=100)
+    plt.savefig("figs/adj1_hist.png")
     print("MAE: ", cross["alt"].abs().mean())
     print("STD: ", cross["alt"].std())
     cross["dlt"] = cross["alt"].abs()
