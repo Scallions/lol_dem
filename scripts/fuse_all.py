@@ -6,8 +6,7 @@ from pathlib import Path
 import os
 
 import tool
-
-DIR = Path("./data/test/out/")
+from constant import *
 
 
 files = set()

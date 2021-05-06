@@ -286,8 +286,8 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				double dtd = (p_r.alt1 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
 				double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
 				double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
-				p_r.ta = ta;
-				p_r.td = td;
+				p_r.ta = l1[i].t1 + l1[i].t2/28.0 + ta*dta;
+				p_r.td = l2[j].t1 + l2[j].t2/28.0 + td*dtd;
 				return p_r;
 			}			
 		}
@@ -385,7 +385,7 @@ int main(int argc, char** argv)
 		for(int j=0; j<dfilepaths.size(); j++){
 			tag = false;
 			crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
-			// if( abs(crossover.alt1 - crossover.alt2) > 0.01) continue;
+			if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
 			if (tag == true){
 				result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
 			}

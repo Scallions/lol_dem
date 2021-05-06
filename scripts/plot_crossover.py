@@ -8,9 +8,8 @@ import os
 import matplotlib.pyplot as plt 
 
 import tool
+from constant import *
 
-DIR = Path("./data/test/out/")
-FUSE = False
 
 
 aorbits = []
@@ -53,9 +52,8 @@ for dorbit, file_ in dorbits:
     plt.plot(dxs, dys, color='b', label="D")
 
 
-PY = False
 ### find cross over point
-if PY:
+if PY_ADJ:
     count = 0
     for i, (dorbit, dfile) in enumerate(dorbits):
         for j, (aorbit, afile) in enumerate(aorbits):
@@ -87,7 +85,13 @@ if PY:
     dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.008,:]
     print("MAE: ",np.abs(dhs[:,0] - dhs[:,1]).mean())  
 else:
-    cross = pd.read_csv(os.path.join(DIR,"crossoverO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
+    if FUSE:
+        Ofile = "crossoverFO.txt"
+        Cfile = "crossoverFC.txt"
+    else:
+        Ofile = "crossoverO.txt"
+        Cfile = "crossoverC.txt"
+    cross = pd.read_csv(os.path.join(DIR,Ofile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.scatter(cross["lon"], cross["lat"], color='g')
     plt.savefig("figs/crossover.png")
     plt.close()
@@ -98,13 +102,21 @@ else:
     print("STD: ", cross["alt"].std())
     cross["dlt"] = cross["alt"].abs()
     print(cross.sort_values("dlt", ascending=False).head())
-    cross = pd.read_csv(os.path.join(DIR,"crossoverC.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
-    plt.hist(cross["alt"], bins=100)
+    cross1 = pd.read_csv(os.path.join(DIR,Cfile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
+    plt.hist(cross1["alt"], bins=100)
     plt.savefig("figs/adj1_hist.png")
-    print("MAE: ", cross["alt"].abs().mean())
-    print("STD: ", cross["alt"].std())
-    cross["dlt"] = cross["alt"].abs()
-    print(cross.sort_values("dlt", ascending=False).head())
+    print("MAE: ", cross1["alt"].abs().mean())
+    print("STD: ", cross1["alt"].std())
+    cross1["dlt"] = cross1["alt"].abs()
+    print(cross1.sort_values("dlt", ascending=False).head())
+    plt.close()
+    min_ = min(cross["alt"].min(),cross1["alt"].min())
+    max_ = max(cross["alt"].max(),cross1["alt"].max())
+    bins = np.linspace(min_, max_, 100)
+    plt.hist(cross["alt"], bins=bins, alpha=0.3, density=False, label="raw")
+    plt.hist(cross1["alt"], bins=bins, alpha=0.3, density=False, label="adj")
+    plt.legend()
+    plt.savefig("figs/hist.png")
 
      
     

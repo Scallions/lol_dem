@@ -10,6 +10,7 @@ import numpy as np
 from sklearn.cluster import *
 from sklearn.ensemble import IsolationForest
 
+from constant import *
 
 ITER = 2
 
@@ -49,19 +50,33 @@ def filter(data):
     return data
 
 #### 定义txt文件目录
-DIR = Path("./data/test/out/")
-# datas = None
-for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.AR")): # 匹配数据文件
-    if os.path.exists(f"{file_[:-3]}.AO"):
-        continue
-    data = read_data(file_)
-    data = filter(data)
-    data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AO", sep=" ", header = 0, index=0, float_format="%.7f")
-    
-for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.DR")): # 匹配数据文件
-    if os.path.exists(f"{file_[:-3]}.DO"):
-        continue
-    data = read_data(file_)
-    data = filter(data)
-    data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DO", sep=" ", header = 0, index=0, float_format="%.7f")
+
+if FUSE:
+    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.AF")): # 匹配数据文件
+        if os.path.exists(f"{file_[:-3]}.AFO"):
+            continue
+        data = read_data(file_)
+        data = filter(data)
+        data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AFO", sep=" ", header = 0, index=0, float_format="%.7f")
+        
+    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.DF")): # 匹配数据文件
+        if os.path.exists(f"{file_[:-3]}.DFO"):
+            continue
+        data = read_data(file_)
+        data = filter(data)
+        data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DFO", sep=" ", header = 0, index=0, float_format="%.7f")
+else:
+    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.AR")): # 匹配数据文件
+        if os.path.exists(f"{file_[:-3]}.AO"):
+            continue
+        data = read_data(file_)
+        data = filter(data)
+        data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AO", sep=" ", header = 0, index=0, float_format="%.7f")
+        
+    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.DR")): # 匹配数据文件
+        if os.path.exists(f"{file_[:-3]}.DO"):
+            continue
+        data = read_data(file_)
+        data = filter(data)
+        data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DO", sep=" ", header = 0, index=0, float_format="%.7f")
     

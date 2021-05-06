@@ -11,22 +11,33 @@ from pykrige.uk import UniversalKriging
 from pykrige.rk import RegressionKriging
 
 import tool
+from constant import *
 
-DIR = Path("./data/test/out/")
 
 ## read data
 aorbits = []
 dorbits = []
 datas = None
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AC")):
-    data =  tool.read_data(file_)[['lon','lat','alt']]
-    if datas is None:
-        datas = data
-    else:
+if FUSE:
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AFC")):
+        data =  tool.read_data(file_)[['lon','lat','alt']]
+        if datas is None:
+            datas = data
+        else:
+            datas = pd.concat([datas, data],ignore_index=True)
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DFC")):
+        data =  tool.read_data(file_)[['lon','lat','alt']]
+        datas = pd.concat([datas, data],ignore_index=True) 
+else:
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AC")):
+        data =  tool.read_data(file_)[['lon','lat','alt']]
+        if datas is None:
+            datas = data
+        else:
+            datas = pd.concat([datas, data],ignore_index=True)
+    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DC")):
+        data =  tool.read_data(file_)[['lon','lat','alt']]
         datas = pd.concat([datas, data],ignore_index=True)
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DC")):
-    data =  tool.read_data(file_)[['lon','lat','alt']]
-    datas = pd.concat([datas, data],ignore_index=True)
 data = datas
 
 ## imputation

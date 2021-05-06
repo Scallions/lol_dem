@@ -9,10 +9,8 @@ from pathlib import Path
 import os
 
 import tool
+from constant import *
 
-# file_path = "./data/dat/out/lolardr_092051421_3_d.txt"
-# datas = tool.read_data(file_path)
-DIR = Path("./data/test/out/")
 
 aorbits = []
 dorbits = []
