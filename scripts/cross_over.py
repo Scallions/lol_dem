@@ -1,10 +1,11 @@
 import pandas as pd 
 import numpy as np 
 import glob 
-from pathlib import Path
 import os 
 import matplotlib.pyplot as plt 
 from scipy.optimize import lsq_linear
+import scipy.sparse as sp 
+import time
 
 import tool
 from constant import *
@@ -61,6 +62,8 @@ if FUSE:
     cross = pd.read_csv(os.path.join(DIR,"crossoverFO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
 else:
     cross = pd.read_csv(os.path.join(DIR,"crossoverO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
+
+cross = cross.loc[::100,:]
 lc = len(cross)
 
 # stda = cross.groupby(["f1"])["alt"].agg("std")
@@ -108,8 +111,11 @@ if False:
     P = P / np.sum(P)
 else:
     v = np.ones((lc))
-    A = np.zeros((lc, (la+ld)*2))
-    P = np.eye(lc)
+    # A = np.zeros((lc, (la+ld)*2))
+    # P = np.eye(lc)
+    A = sp.dok_matrix((lc, (la+ld)*2))
+    # P = sp.identity(lc)
+    P = np.zeros((lc,))
     for i in range(lc):
         # one
         afile = cross.iloc[i,0]
@@ -124,12 +130,14 @@ else:
         at = cross.iloc[i,4] - aorbits[ai][0][0][-2]
         dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
         v[i] = d 
-        P[i] = 1/abs(d)
+        # P[i,i] = 1/(abs(d)+1e-6)
+        P[i] = 1/(abs(d)+1e-6)
         A[i,2*ai] = 1
         A[i,2*ai+1] = at 
         A[i,2*di] = -1
         A[i,2*di+1] = -dt
     P = P / np.sum(P)
+    P = sp.diags(P)
 
 
 # x = (A^TPA)^{-1} A^T P l
@@ -138,22 +146,33 @@ else:
 
 print("Before: ", cross["alt"].abs().mean(), cross["alt"].std())
 # init x
+start = time.time()
 rhi = 2
 rhi1 = 2
 # use scipy ?
+# I = np.eye((la+ld)*2)
+I = sp.identity((la+ld)*2)
 if True:
-    X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * np.eye((la+ld)*2)), np.transpose(A)), v)
+    # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
+    X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
 else:
     X = lsq_linear(A, v)
     X = X.x
-print("Init: ", np.abs(v - np.dot(A,X)).mean(), np.std(v - np.dot(A,X)))
+print("Init: ", np.abs(v - A*X).mean(), np.std(v - A*X))
+PX = sp.identity((la+ld)*2)
 for i in range(1):
-    L = v - np.dot(A, X)
+    # L = v - np.dot(A, X)
+    L = v - A*X
     # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
-    x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + rhi1 * np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
+    # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + rhi1 * np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
+    x = sp.linalg.inv(sp.csc_matrix(A.T * P * A + rhi1 * PX)) * A.T * P * L
     X = X + x 
-    t = v - np.dot(A, X)
+    # t = v - np.dot(A, X)
+    t = v - A*X
     print(f"After adj({i}): ", np.abs(t).mean(), np.std(t))
+
+end = time.time()
+print("time: ", end-start)
 
 x = X
 # x = lsq_linear(A, v, lsq_solver="exact")

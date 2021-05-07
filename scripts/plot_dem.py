@@ -41,11 +41,11 @@ else:
 data = datas
 
 ## imputation
-lons = data["lon"].values[::10]
-lats = data["lat"].values[::10]
-alts = data["alt"].values[::10]
-grid_lon = np.linspace(min(lons),max(lons),200)
-grid_lat = np.linspace(min(lats),max(lats),200)
+lons = data["lon"].values[::10000]
+lats = data["lat"].values[::10000]
+alts = data["alt"].values[::10000]
+grid_lon = np.linspace(min(lons),max(lons),2000)
+grid_lat = np.linspace(min(lats),max(lats),2000)
 OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")
 # OK = UniversalKriging(lons, lats, alts)
 # OK = RegressionKriging(lons, lats, alts,)
@@ -63,6 +63,7 @@ grid = xr.DataArray(z1*1000, coords=(grid_lat,grid_lon))
 ## plot dem
 fig = pygmt.Figure()
 fig.basemap(region=[36.285536, 49.296789, -86.9, -85.1], projection="L42/-86/-85/-87/5i", frame=True)
+pygmt.makecpt(cmap="geo", series=[alts.min(), alts.max()])
 fig.grdimage(
     grid = grid,
     cmap = "geo"

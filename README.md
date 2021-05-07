@@ -34,3 +34,7 @@ file format:
 - *.[A|D]O: remove outlier
 - *.[A|D]OF: fuse remove outlier
 - *.[A|D]C: after crossover adj
+
+## TODO
+- sparse matrix
+- multiple thread
