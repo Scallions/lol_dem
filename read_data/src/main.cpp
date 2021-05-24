@@ -6,6 +6,8 @@
 #include <cmath>
 #include <iomanip>
 
+#include "Logger.hpp"
+
 using namespace std;
 
 // 定义数据结构
@@ -125,19 +127,27 @@ bool in_area(double lon, double lat, double lon_down, double lon_up, double lat_
 int main(int argc, char** argv)
 {
 
-    if(argc!=2)
+    if(argc!=2 && argc != 6)
     {
+		cout << "Argc not right: " << argc << endl;
         cout << "Usage:" << endl;
-        cout << "   ./read_data <dat_dir>" << endl;
+        cout << "   ./read_data <dat_dir> [REGION]" << endl;
         return 1;
     }
 
     string dir = argv[1];
+	
 
 
 	// double lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 	// shoemaker
 	double lon_down = 36.285536, lon_up = 49.296789, lat_down = -86.9, lat_up = -85.1;
+	if(argc == 6){
+		lon_down = atof(argv[2]);
+		lon_up = atof(argv[3]);
+		lat_down = atof(argv[4]);
+		lat_up = atof(argv[5]);
+	}
 
     // boost::filesystem::path dir_path("/home/cyf/Code/Jupyter/lol/dat/out");
     // boost::filesystem::path old_cpath = boost::filesystem::current_path();
@@ -154,19 +164,24 @@ int main(int argc, char** argv)
     }
     // boost::filesystem::path list_path("list.txt");
 
+	// print some info
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "       Start read data        " << endl;
     cout << "++++++++++++++++++++++++++++++" << endl;
+	cout << "\tRead dir: " << dir_path.string() << endl;
+	cout << "\tRead area: " << lon_down << "," << lon_up << "," << lat_down << "," << lat_up << endl;
 
     boost::filesystem::recursive_directory_iterator itEnd;
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
     {
         // 遍历文件夹
-        // cout << itor->path().extension() << endl;
+        // LOG << itor->path().extension().string() << "\n";
+		// cout << itor->path().extension() << endl;
         if(itor->path().extension() == ".DAT") // 找到 dat 数据文件
         {
             
-            // cout << "Reading: " << itor->path() << endl;
+            // LOG << "Reading: " << itor->path().string() << "\n";
+			// cout << "Reading: " << itor->path().string() << endl;
 
 			ifstream dat_stream(itor->path().string().c_str(), ios::binary);
             vector<ofstream> out_streams(10);

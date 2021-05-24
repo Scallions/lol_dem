@@ -6,7 +6,9 @@ import tool
 file_path = "./data/dat/out/lolardr_092051421_3_d.txt"
 datas = tool.read_data(file_path)
 fig = pygmt.Figure()
-fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+# fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+fig.basemap(region=REGION, projection=f"L{(REGION[0]+REGION[1])/2}/{(REGION[2]+REGION[3])/2}/{REGION[2]}/{REGION[3]}/5i", frame=True)
+
 # fig.basemap(region=[-90, -70, 0, 20], projection="M8i", frame=True)
 pygmt.makecpt(cmap="geo", series=[datas.alt.min(), datas.alt.max()])
 fig.plot(

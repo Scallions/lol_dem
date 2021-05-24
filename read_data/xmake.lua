@@ -7,7 +7,7 @@ target("read_data")
     add_files("src/*.cpp")
     add_packages("boost")
     on_load(function (target)
-        target:add(find_packages("boost"))
+        target:add(find_packages("boost", "pthread"))
     end)
 
 --

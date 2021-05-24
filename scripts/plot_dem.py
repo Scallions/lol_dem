@@ -1,3 +1,4 @@
+from scripts.constant import REGION
 import pandas as pd 
 import glob
 from pathlib import Path
@@ -62,7 +63,7 @@ grid = xr.DataArray(z1*1000, coords=(grid_lat,grid_lon))
 
 ## plot dem
 fig = pygmt.Figure()
-fig.basemap(region=[36.285536, 49.296789, -86.9, -85.1], projection="L42/-86/-85/-87/5i", frame=True)
+fig.basemap(region=REGION, projection=f"L{(REGION[0]+REGION[1])/2}/{(REGION[2]+REGION[3])/2}/{REGION[2]}/{REGION[3]}/5i", frame=True)
 pygmt.makecpt(cmap="geo", series=[alts.min(), alts.max()])
 fig.grdimage(
     grid = grid,

@@ -35,7 +35,9 @@ orbits = np.vstack([aorbits_,dorbits_])
 datas = pd.DataFrame(orbits, columns = ["lon","lat","alt"])
 
 fig = pygmt.Figure()
-fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+# fig.basemap(region=[48.29, 211.22, -90, -89.322229], projection="A129/-90/5i", frame=True)
+fig.basemap(region=REGION, projection=f"L{(REGION[0]+REGION[1])/2}/{(REGION[2]+REGION[3])/2}/{REGION[2]}/{REGION[3]}/5i", frame=True)
+
 # fig.basemap(region=[-90, -70, 0, 20], projection="M8i", frame=True)
 pygmt.makecpt(cmap="geo", series=[datas.alt.min()-1, datas.alt.max()+1])
 fig.plot(

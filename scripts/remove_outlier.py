@@ -1,6 +1,7 @@
 # remove outlier in single orbit file
 # outlier point may lon lat or alt not only the alt
 
+from typing import Type
 import pandas as pd 
 import glob
 from pathlib import Path
@@ -31,12 +32,15 @@ def proc_df(df):
 def read_data(file_path):
     df = pd.read_csv(file_path, header=None, sep=r"\s+", names=["lon","lat","alt","t1","t2"])
     if df.shape[0] < 50:
-        return None
+        return df
     return proc_df(df)
 
 def filter(data):
     for i in range(ITER):
-        res = KMeans(n_clusters=2).fit(data[["dh1","dh2"]].abs()) 
+        try:
+            res = KMeans(n_clusters=2).fit(data[["dh1","dh2"]].abs()) 
+        except TypeError:
+            print(data.shape)
     #     res = AgglomerativeClustering(n_clusters=2).fit(data[["dh1","dh2"]].abs())
         # yhat = IsolationForest(contamination=0.03).fit_predict(data[["dh1","dh2"]].abs())
     #     res = OPTICS().fit(data[["dh1","dh2"]].abs())
@@ -58,6 +62,8 @@ if FUSE:
         if os.path.exists(f"{file_[:-3]}.AFO"):
             continue
         data = read_data(file_)
+        if(len(data) < 50):
+            continue
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AFO", sep=" ", header = 0, index=0, float_format="%.7f")
         
@@ -65,6 +71,8 @@ if FUSE:
         if os.path.exists(f"{file_[:-3]}.DFO"):
             continue
         data = read_data(file_)
+        if(len(data) < 50):
+            continue
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DFO", sep=" ", header = 0, index=0, float_format="%.7f")
 else:
@@ -72,6 +80,8 @@ else:
         if os.path.exists(f"{file_[:-3]}.AO"):
             continue
         data = read_data(file_)
+        if(len(data) < 50):
+            continue
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AO", sep=" ", header = 0, index=0, float_format="%.7f")
         
@@ -79,6 +89,8 @@ else:
         if os.path.exists(f"{file_[:-3]}.DO"):
             continue
         data = read_data(file_)
+        if(len(data) < 50):
+            continue
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DO", sep=" ", header = 0, index=0, float_format="%.7f")
     

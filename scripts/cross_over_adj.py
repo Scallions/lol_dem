@@ -63,7 +63,7 @@ if FUSE:
 else:
     cross = pd.read_csv(os.path.join(DIR,"crossoverO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
 
-cross = cross.loc[::100,:]
+cross = cross.loc[::10000,:]
 lc = len(cross)
 
 # stda = cross.groupby(["f1"])["alt"].agg("std")
