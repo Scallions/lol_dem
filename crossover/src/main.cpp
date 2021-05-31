@@ -338,8 +338,14 @@ int main(int argc, char** argv)
         return 1;
     }
 	string dir = argv[1];
-	string ext = argc==3?argv[2]:"O";
+	string ext = argc==7?argv[6]:argc==3?argv[2]:"O";
 
+	if(argc >= 6){
+		lon_down = atof(argv[2]);
+		lon_up = atof(argv[3]);
+		lat_down = atof(argv[4]);
+		lat_up = atof(argv[5]);
+	}
 
     boost::filesystem::path dir_path(dir);
     // dir_path = old_cpath / dir_path;
@@ -357,6 +363,9 @@ int main(int argc, char** argv)
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "       Start crossover        " << endl;
     cout << "++++++++++++++++++++++++++++++" << endl;
+	cout << "\tRead dir: " << dir_path.string() << endl;
+	cout << "\tRead area: " << lon_down << "," << lon_up << "," << lat_down << "," << lat_up << endl;
+
 
 	cout << "Finding all file." << endl;
 	vector<string> afilepaths;

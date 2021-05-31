@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import *
 from sklearn.ensemble import IsolationForest
+from tqdm import tqdm
 
 from constant import *
 
@@ -76,7 +77,7 @@ if FUSE:
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.DFO", sep=" ", header = 0, index=0, float_format="%.7f")
 else:
-    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.AR")): # 匹配数据文件
+    for file_ in tqdm(glob.iglob(os.path.join(DIR,r"LOLARDR_*.AR"))): # 匹配数据文件
         if os.path.exists(f"{file_[:-3]}.AO"):
             continue
         data = read_data(file_)
@@ -85,7 +86,7 @@ else:
         data = filter(data)
         data[["lon","lat","alt","t1","t2"]].to_csv(f"{file_[:-3]}.AO", sep=" ", header = 0, index=0, float_format="%.7f")
         
-    for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.DR")): # 匹配数据文件
+    for file_ in tqdm(glob.iglob(os.path.join(DIR,r"LOLARDR_*.DR"))): # 匹配数据文件
         if os.path.exists(f"{file_[:-3]}.DO"):
             continue
         data = read_data(file_)
