@@ -7,7 +7,7 @@ target("crossover")
     add_files("src/main.cpp")
     add_packages("boost")
     on_load(function (target)
-        target:add(find_packages("boost"))
+        target:add(find_packages("boost", "pthread"))
     end)
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

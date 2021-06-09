@@ -11,6 +11,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <boost/filesystem.hpp>
+#include "threadpool.h"
+
 using namespace std;
 
 #define min(a,b) a<b?a:b  
@@ -27,6 +29,8 @@ struct crosspoint
 	double lon, lat, alt1, alt2;
 	double ta, td;
 	int i,j;
+	bool tag;
+	string f1, f2;
 };
 
 
@@ -298,29 +302,34 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 
 }
 
-crosspoint get_crossover(string f1, string f2, bool & tag){// if find crossover set tage to true and return point
+crosspoint get_crossover(string f1, string f2, map<string, vector<point>>& lmap){// if find crossover set tage to true and return point
 	// cout << f1 << " " << f2 << endl;
 
-	tag = false;
+	bool tag = false;
 
-	vector<point> l1;
-	vector<point> l2;
+	vector<point> l1 = lmap[f1];
+	vector<point> l2 = lmap[f2];
 
-	point tem;
-	ifstream ff1(f1.c_str());
-	int t;
-	while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
-		l1.push_back(tem);
-	ff1.close();
+	// point tem;
+	// ifstream ff1(f1.c_str());
+	// int t;
+	// while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
+	// 	l1.push_back(tem);
+	// ff1.close();
 
-	ifstream ff2(f2.c_str());
-	while (ff2 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
-		l2.push_back(tem);
-	ff2.close();
+	// ifstream ff2(f2.c_str());
+	// while (ff2 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
+	// 	l2.push_back(tem);
+	// ff2.close();
 
 	// cout << l1.size() - 1 << " " << l2.size() - 1 << endl;
 
-	return calc_crossover(l1, l2,0,l1.size()-1,0,l2.size()-1, tag);
+	crosspoint cp =  calc_crossover(l1, l2,0,l1.size()-1,0,l2.size()-1, tag);
+	cp.f1 = f1;
+	cp.f2 = f2;
+	cp.tag = tag;
+
+	return cp;
 
 }
 
@@ -371,6 +380,7 @@ int main(int argc, char** argv)
 	vector<string> afilepaths;
 	vector<string> dfilepaths;
     boost::filesystem::recursive_directory_iterator itEnd;
+	map<string, vector<point>> lmap;
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
     {
         // 遍历文件夹
@@ -378,29 +388,68 @@ int main(int argc, char** argv)
         if((itor->path().extension() == ".A"+ext) && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
 			afilepaths.push_back(itor->path().string());
+			vector<point> l1;
+
+			point tem;
+			ifstream ff1(itor->path().string().c_str());
+			int t;
+			while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
+				l1.push_back(tem);
+			ff1.close();
+			lmap[itor->path().string()] = l1;
 		}
 		if((itor->path().extension() == ".D"+ext) && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
 			dfilepaths.push_back(itor->path().string());
+			vector<point> l1;
+
+			point tem;
+			ifstream ff1(itor->path().string().c_str());
+			int t;
+			while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
+				l1.push_back(tem);
+			ff1.close();
+			lmap[itor->path().string()] = l1;
 		}
 	}
+	cout << "\tAscend orbits: " << afilepaths.size() << endl;
+	cout << "\tDscend orbits: " << dfilepaths.size() << endl;
 	bool tag;
 	crosspoint crossover;
+	// multiple thread
+	vector<future<crosspoint>> result_fs;
+	threadpool pool(32);
+
 	boost::filesystem::path out_path = dir_path / "out" / ("crossover" + ext + ".txt");
-	ofstream result(out_path.string().c_str());	
+	ofstream result(out_path.string().c_str());
+	// ofstream result_s((out_path.string() + "f").c_str());
     int nums = afilepaths.size();
 	cout << "Finding crossover." << endl;
 	for(int i=0; i<afilepaths.size(); i++){
 		for(int j=0; j<dfilepaths.size(); j++){
-			tag = false;
-			crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
-			if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
-			if (tag == true){
-				result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
-			}
+			result_fs.emplace_back(pool.commit([&] {
+				return get_crossover(afilepaths[i], dfilepaths[j], lmap);
+			}));
+			// tag = false;
+			// crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
+			// if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
+			// if (tag == true){
+			// 	result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
+			// }
 		}
-		cout << "\r" << i << "/" << nums << flush;
+		// cout << "\r" << i << "/" << nums << flush;
 	}
+	cout << "\tTask size: " << result_fs.size() << endl;
+	int count_t = 0;
+	for(auto && result_f: result_fs){
+		crossover = result_f.get();
+		// if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
+		if (crossover.tag == true){
+			result<< fixed << setprecision(7) << crossover.f1 <<" "<< crossover.f2 <<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
+			++count_t;
+		}
+	}
+	cout << "\t Find crosspoint: " << count_t << endl;
     result.close();
 	cout << endl;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
