@@ -302,7 +302,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 
 }
 
-crosspoint get_crossover(string f1, string f2, map<string, vector<point>>& lmap){// if find crossover set tage to true and return point
+crosspoint get_crossover(const string &f1, const string &f2, map<string, vector<point>>& lmap){// if find crossover set tage to true and return point
 	// cout << f1 << " " << f2 << endl;
 
 	bool tag = false;
