@@ -1,91 +1,54 @@
 /*
  * Read data in dir and find cross point ouput to a file
+ * change old c++ style to c++11 and more modern
  */
 
 #include <iomanip>
 #include <string>
-#include <stdio.h>
+//#include <stdio.h>
 #include <fstream>
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <boost/filesystem.hpp>
 #include "threadpool.h"
 
 using namespace std;
 
-#define min(a,b) a<b?a:b  
-#define max(a,b) a>b?a:b 
+inline double min(double a,double b){a<b?a:b;}
+inline double max(double a,double b){a>b?a:b;}
 
+
+// 点数据
 struct point
 {
 	double lon, lat, alt;
 	int t1,t2;
 };
 
+// 交叉点
 struct crosspoint
 {
 	double lon, lat, alt1, alt2;
 	double ta, td;
 	int i,j;
-	bool tag;
+	bool tag; // 标记是否找到交叉点 false表示无
 	string f1, f2;
 };
 
 
-struct line_p2{
-	string filename;
-	point p1, p2;
-};
 
+// Deprecated
 // struct cross_line{
 // 	string  f1, f2;
 // };
 
-int in_lat(double lat, double lat_down, double lat_up){
-	if ((lat >= lat_down) && (lat <= lat_up)){
-		return 1;
-	}
-	else
-		return -1;
-}
 
-line_p2 get_p2(string filename, double lat_down, double lat_up){
-	ifstream dat(filename.c_str());
-	line_p2 pp;
-	pp.filename = filename;
-	pp.p1.lon = -99999;
-	int sum = 0;
-	point  r1, r2, r;
-	int tag1 = 0, tag2 = 0;
-	string tem;
-	while (dat >> r1.lon >> r1.lat >> r1.alt>>tem){
-        // find first point in range
-		tag1 = in_lat(r1.lat, lat_down, lat_up);
-		if (tag1 == 1){
-			sum++;
-			break;
-		}
-	}
-	while (dat >> r2.lon >> r2.lat >> r2.alt>>tem){
-        // find first point after r1 and not in range
-		tag2 = in_lat(r2.lat, lat_down, lat_up);
-		if (tag2 == 1)
-			sum++;
-		else{
-			r2 = r;
-			break;
-		}
-		r = r2;
-	}
-	dat.close();
-	pp.p1 = r1;
-	pp.p2 = r2;
-	return pp;
 
-}
-double mult(point a, point b, point c)      //??  
+
+
+double mult(point a, point b, point c)      //??
 {
 	return (a.lon - c.lon)*(b.lat - c.lat) - (b.lon - c.lon)*(a.lat - c.lat);
 }
@@ -124,7 +87,7 @@ bool intersect(point aa, point bb, point cc, point dd)  //???????
 	return true;
 }
 
-bool in_rectangle(double lon, double lat, double lon_down, double lon_up, double lat_down, double lat_up)//??????????? 
+inline bool in_rectangle(double lon, double lat, double lon_down, double lon_up, double lat_down, double lat_up)//???????????
 {
     // in rectangle = = å
 	if ((lon<lon_up) && (lon>lon_down) && (lat<lat_up) && (lat>lat_down))
@@ -303,26 +266,13 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 }
 
 crosspoint get_crossover(const string &f1, const string &f2, map<string, vector<point>>& lmap){// if find crossover set tage to true and return point
-	// cout << f1 << " " << f2 << endl;
 
 	bool tag = false;
 
 	vector<point> l1 = lmap[f1];
 	vector<point> l2 = lmap[f2];
 
-	// point tem;
-	// ifstream ff1(f1.c_str());
-	// int t;
-	// while (ff1 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
-	// 	l1.push_back(tem);
-	// ff1.close();
 
-	// ifstream ff2(f2.c_str());
-	// while (ff2 >> tem.lon >> tem.lat >> tem.alt>>tem.t1>>tem.t2)
-	// 	l2.push_back(tem);
-	// ff2.close();
-
-	// cout << l1.size() - 1 << " " << l2.size() - 1 << endl;
 
 	crosspoint cp =  calc_crossover(l1, l2,0,l1.size()-1,0,l2.size()-1, tag);
 	cp.f1 = f1;
@@ -336,7 +286,6 @@ crosspoint get_crossover(const string &f1, const string &f2, map<string, vector<
 int main(int argc, char** argv)
 {
 	double lon_down, lon_up, lat_down, lat_up;
-	// lon_down = 294, lon_up = 309, lat_down = 33, lat_up = 48;
     lon_down = 48.285536, lon_up = 211.296789, lat_down = -90, lat_up = -89.322266;
 	string  filename;
 
@@ -357,7 +306,6 @@ int main(int argc, char** argv)
 	}
 
     boost::filesystem::path dir_path(dir);
-    // dir_path = old_cpath / dir_path;
     if(!boost::filesystem::exists(dir_path))  //推断文件存在性
     {
         cout << "Directory doesn't exists: " << dir_path << endl;
@@ -367,7 +315,6 @@ int main(int argc, char** argv)
     {
         boost::filesystem::create_directory(dir_path / "out");
     }
-    // boost::filesystem::path list_path("list.txt")
 
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "       Start crossover        " << endl;
@@ -384,7 +331,6 @@ int main(int argc, char** argv)
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
     {
         // 遍历文件夹
-        // cout << itor->path().extension() << endl;
         if((itor->path().extension() == ".A"+ext) && (itor->path().stem().string().substr(0,7) == "LOLARDR")) // 找到 dat 数据文件
         {
 			afilepaths.push_back(itor->path().string());
@@ -449,83 +395,12 @@ int main(int argc, char** argv)
 			++count_t;
 		}
 	}
-	cout << "\t Find crosspoint: " << count_t << endl;
+	cout << "\tFind crosspoint: " << count_t << endl;
     result.close();
 	cout << endl;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	//system("dir D:\\1111\\data\\in_r /s /b  >filelist.txt");
-	
-	//ifstream filelist("filelist.txt");
-	//vector<line_p2> p2;
-	//int num1 = 0;
-	//while (filelist >> filename){
-	//	cout << "????" << filename << endl;
-	//	num1++;
-	//	line_p2 ppp = get_p2(filename, lat_down, lat_up);
-	//	p2.push_back(ppp);
-	//}
-	//cout << p2.size() << endl;
-	//
-	//ofstream p2_out("p2_out.txt");
-	//
-	//for (int i = 0; i< p2.size(); i++)
-	//	p2_out << p2[i].filename << " " << fixed << setprecision(7) << p2[i].p1.lon << " " << p2[i].p1.lat << " " << p2[i].p2.lon << " " << p2[i].p2.lat << endl;
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//vector<cross_line> cross;
-	//ifstream p2_out("p2_out.txt");
-	//line_p2 ppp;
-	//vector<line_p2> p2;
-	//while (p2_out >> ppp.filename >> ppp.p1.lon  >> ppp.p1.lat >> ppp.p2.lon >> ppp.p2.lat )
-	//	p2.push_back(ppp);
-	//cout << p2.size() << endl;
-	//for (int i = 0; i< p2.size(); i++)
-	//{
-	//	for (int j = i + 1; j < p2.size(); j++){
-	//		//cout << p2[i].filename.substr(16, 17).c_str() << endl;
-	//		if (strcmp(p2[i].filename.substr(16, 17).c_str(), p2[j].filename.substr(16, 17).c_str()) != 0)
-	//		{
-	//			if (intersect(p2[i].p1, p2[i].p2, p2[j].p1, p2[j].p2))
-	//			{
-	//				cross_line tem;
-	//				tem.f1 = p2[i].filename;
-	//				tem.f2 = p2[j].filename;
-	//				cross.push_back(tem);
-	//			}
-	//		}
-	//	}
 
-	//}
-
-	//cout << "????:" << cross.size() << endl;
-
-	//ofstream cross_l("cross_line.txt");
-	//for (int i = 0; i< cross.size(); i++)
-	//	cross_l << cross[i].f1 << " " << cross[i].f2 << endl;
-
-
-	// use cross_line.txt generate cross points
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// ifstream cross_l("cross_line.txt");
-	// cross_line cross_p;
-	// point crossover;
-	// ofstream result("crossover.txt",ios::app);
-	// ofstream result_r("crossover_r.txt",ios::app);
-	// ofstream result_w("crossover_w.txt");
-	// bool tag;
-	// while (cross_l >> cross_p.f1 >> cross_p.f2){
-    //     tag = false;
-    // 	crossover = get_crossover(cross_p.f1, cross_p.f2,tag);
-	// 	if (tag == false)
-	// 		result_w << cross_p.f1 << "?" << cross_p.f2 << endl;
-	// 	else{
-	// 		result_r << cross_p.f1 << "?" << cross_p.f2 << "  " << fixed << setprecision(7) << crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
-	// 		result<< fixed << setprecision(7) << crossover.lon << " " << crossover.lat << " " << crossover.alt << endl;
-	// 	}
-			
-	// }
-	  
 
 
 	return 0;
