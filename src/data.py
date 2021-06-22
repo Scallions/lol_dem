@@ -42,9 +42,18 @@ def load_data(data_type, data_dir = DIR):
         dorbits.append((data, file_))
     return (aorbits, dorbits)
 
+def save_data(data, data_type, data_dir = DIR):
+    """
+    save data to dir with type info
+    """
+    for orbit_name, orbit in data:
+        orbit.to_csv(f"{orbit_name}.{data_type}")
+
+
 def read_crossover_points():
     """
-    
+    read crossover point infos in the crossover programe out file
     """
-
+    cross_fp = "test"
+    
     return 1

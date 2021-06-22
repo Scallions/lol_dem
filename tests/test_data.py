@@ -12,16 +12,21 @@ DIR = constants.DIR
 def data_path():
     return DIR
 
+@pytest.fixture()
+def raw_data(data_path):
+    aos, dos = data.load_data("R", data_dir = data_path)
+    return (aos, dos)
+
 def test_b(data_path):
     print(DIR)
     assert data_path == DIR
 
 
-def test_load_data_count():
+def test_load_data_count(data_path):
     """
     test the data loaded whether with right number
     """
-    aos, dos = data.load_data("R", data_dir = DIR)
+    aos, dos = data.load_data("R", data_dir = data_path)
     print(len(aos), len(dos))
     print(os.getcwd())
     assert len(aos) == 50

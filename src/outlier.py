@@ -41,3 +41,14 @@ def kmeans_filter(datas):
             data = proc_df(data)
         datas[j] = data
     return datas
+
+def filter(datas, filter_method=kmeans_filter):
+    """
+    filter the outlier in the datas
+    """
+    # TODO: pre and post work of the filter
+    logger.debug(f"Filter: kmeans")
+    filter_data =  filter_method(datas)
+    logger.debug("Filter finished")
+    # calc the filter rate
+    # logger.info("FIlter rate: 2%")

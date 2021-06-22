@@ -360,7 +360,7 @@ int main(int argc, char** argv)
 	}
 	cout << "\tAscend orbits: " << afilepaths.size() << endl;
 	cout << "\tDscend orbits: " << dfilepaths.size() << endl;
-	bool tag;
+
 	crosspoint crossover;
 	// multiple thread
 	vector<future<crosspoint>> result_fs;
@@ -373,7 +373,7 @@ int main(int argc, char** argv)
 	cout << "Finding crossover." << endl;
 	for(int i=0; i<afilepaths.size(); i++){
 		for(int j=0; j<dfilepaths.size(); j++){
-			result_fs.emplace_back(pool.commit([&] {
+			result_fs.emplace_back(pool.commit([&afilepaths, &dfilepaths, i, j, &lmap]() {
 				return get_crossover(afilepaths[i], dfilepaths[j], lmap);
 			}));
 			// tag = false;
