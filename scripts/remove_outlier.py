@@ -58,6 +58,7 @@ def filter(data):
 
 #### 定义txt文件目录
 
+print("Start filter: DIR: ", DIR, "FUSE: ", FUSE)
 if FUSE:
     for file_ in glob.iglob(os.path.join(DIR,r"LOLARDR_*.AF")): # 匹配数据文件
         if os.path.exists(f"{file_[:-3]}.AFO"):

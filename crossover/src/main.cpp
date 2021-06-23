@@ -364,7 +364,7 @@ int main(int argc, char** argv)
 	crosspoint crossover;
 	// multiple thread
 	vector<future<crosspoint>> result_fs;
-	threadpool pool(32);
+	threadpool pool(48);
 
 	boost::filesystem::path out_path = dir_path / "out" / ("crossover" + ext + ".txt");
 	ofstream result(out_path.string().c_str());

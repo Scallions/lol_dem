@@ -35,6 +35,23 @@ file format:
 - *.[A|D]OF: fuse remove outlier
 - *.[A|D]C: after crossover adj
 
+## config 设置
+在根目录创建`config.ini`
+
+```
+[DEFAULT]
+dir = ./data/202,222,-86,-84
+region = 202,222,-86,-84
+adj = no
+fuse = no
+iter = 2
+
+[custom]
+dir = ./datas/shoemaker,18,74,-89,-85
+region = 18,74,-89,-85
+```
+根据需要在 `custom` 里面覆盖默认设置
+
 ## TODO
 - sparse matrix
 - multiple thread
