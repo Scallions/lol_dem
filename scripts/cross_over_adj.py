@@ -147,19 +147,23 @@ else:
 
 print("Before: ", cross["alt"].abs().mean(), cross["alt"].std())
 # init x
+# TODO: 分别计算初始值
 start = time.time()
 rhi = 2
 rhi1 = 2
 # use scipy ?
 # I = np.eye((la+ld)*2)
 I = sp.identity((la+ld)*2)
-if True:
+if False:
     # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
     X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
 else:
-    X = lsq_linear(A, v)
-    X = X.x
+    # X = lsq_linear(A, v)
+    X = sp.linalg.lsqr(A, v)
+    X = X[0]
 print("Init: ", np.abs(v - A*X).mean(), np.std(v - A*X))
+
+# 间接平差
 PX = sp.identity((la+ld)*2)
 for i in range(1):
     # L = v - np.dot(A, X)
