@@ -1,4 +1,4 @@
-from scripts.constant import REGION
+from constant import REGION
 import pandas as pd 
 import glob
 from pathlib import Path

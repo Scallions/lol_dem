@@ -311,10 +311,10 @@ int main(int argc, char** argv)
         cout << "Directory doesn't exists: " << dir_path << endl;
         return 1;
     }
-    if(!boost::filesystem::exists(dir_path / "out"))  //推断文件存在性
-    {
-        boost::filesystem::create_directory(dir_path / "out");
-    }
+    // if(!boost::filesystem::exists(dir_path / "out"))  //推断文件存在性
+    // {
+    //     boost::filesystem::create_directory(dir_path / "out");
+    // }
 
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "       Start crossover        " << endl;
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
 	vector<future<crosspoint>> result_fs;
 	threadpool pool(48);
 
-	boost::filesystem::path out_path = dir_path / "out" / ("crossover" + ext + ".txt");
+	boost::filesystem::path out_path = dir_path / ("crossover" + ext + ".txt");
 	ofstream result(out_path.string().c_str());
 	// ofstream result_s((out_path.string() + "f").c_str());
     int nums = afilepaths.size();

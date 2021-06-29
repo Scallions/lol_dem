@@ -11,6 +11,7 @@ config.read("./config.ini")
 
 # DIR = Path("./data/202,222,-86,-84")
 DIR = Path(config["custom"]["dir"])
+NAME = config["custom"]["name"]
 PY_ADJ = config.getboolean("custom", "adj")
 FUSE = config.getboolean("custom", "fuse")
 ITER = int(config["custom"]["iter"])
