@@ -193,11 +193,12 @@ int main(int argc, char** argv)
         if(itor->path().extension() == ".DAT") // 找到 dat 数据文件
         {
 			++fileCount;
-			pool.commit([&, itor](){
+			boost::filesystem::path data_path = itor->path();
+			pool.commit([&, data_path](){
 				// LOG << "Reading: " << itor->path().string() << "\n";
 				// cout << "Reading: " << itor->path().string() << endl;
 
-				ifstream dat_stream(itor->path().string().c_str(), ios::binary);
+				ifstream dat_stream(data_path.string().c_str(), ios::binary);
 				vector<ofstream> out_streams(10);
 				vector<boost::filesystem::path> out_paths(10);
 
@@ -228,8 +229,8 @@ int main(int argc, char** argv)
 				for(int i=0; i<5; ++i){
 					int n = reals[i].size();
 					if(n<100) continue;
-					string afilename = itor->path().stem().string() + "_" + to_string(i+1) + ".AR";
-					string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + ".DR";
+					string afilename = data_path.stem().string() + "_" + to_string(i+1) + ".AR";
+					string dfilename = data_path.stem().string() + "_" + to_string(i+1) + ".DR";
 					boost::filesystem::path aout_path = dir_path / dirname / afilename;
 					boost::filesystem::path dout_path = dir_path / dirname / dfilename;
 					out_streams[i<<1].open(dout_path.string().c_str());
@@ -285,10 +286,15 @@ int main(int argc, char** argv)
     }
     
 	// 启动输出显示
-	pool.commit([&](){
-		this_thread::sleep_for(chrono::milliseconds(500));
-		if(count == fileCount) return;
-		cout << "Read: " << count << "/" << fileCount << "\r";
+	long long last = 0;
+	thread t([&](){
+		while(true){
+			if(count == fileCount) return;
+			if(count==last) continue;
+			cout << "Read: " << count << "/" << fileCount << endl;
+			last = count;
+			this_thread::sleep_for(chrono::milliseconds(500));
+		}
 	});
 	
 	return 0;
