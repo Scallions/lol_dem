@@ -5,8 +5,12 @@
 #include <sstream>
 #include <cmath>
 #include <iomanip>
+#include <atomic>
+#include <thread>
+#include <chrono>
 
 #include "Logger.hpp"
+#include "threadpool.h"
 
 using namespace std;
 
@@ -158,9 +162,10 @@ int main(int argc, char** argv)
         cout << "Directory doesn't exists: " << dir_path << endl;
         return 1;
     }
-    if(!boost::filesystem::exists(dir_path / "out"))  //推断文件存在性
+	string dirname = to_string(lon_down)+","+to_string(lon_up)+","+to_string(lat_down)+","+to_string(lat_up);
+    if(!boost::filesystem::exists(dir_path / dirname))  //推断文件存在性
     {
-        boost::filesystem::create_directory(dir_path / "out");
+        boost::filesystem::create_directory(dir_path / dirname);
     }
     // boost::filesystem::path list_path("list.txt");
 
@@ -172,6 +177,14 @@ int main(int argc, char** argv)
 	cout << "\tRead area: " << lon_down << "," << lon_up << "," << lat_down << "," << lat_up << endl;
 
     boost::filesystem::recursive_directory_iterator itEnd;
+	threadpool pool(48);
+
+
+
+	long long fileCount = 0;
+	atomic_llong count(0);
+
+
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
     {
         // 遍历文件夹
@@ -179,89 +192,104 @@ int main(int argc, char** argv)
 		// cout << itor->path().extension() << endl;
         if(itor->path().extension() == ".DAT") // 找到 dat 数据文件
         {
-            
-            // LOG << "Reading: " << itor->path().string() << "\n";
-			// cout << "Reading: " << itor->path().string() << endl;
+			++fileCount;
+			pool.commit([&, itor](){
+				// LOG << "Reading: " << itor->path().string() << "\n";
+				// cout << "Reading: " << itor->path().string() << endl;
 
-			ifstream dat_stream(itor->path().string().c_str(), ios::binary);
-            vector<ofstream> out_streams(10);
-			vector<boost::filesystem::path> out_paths(10);
-			// open stream
-			for(int i=0; i<5; ++i){
-				string afilename = itor->path().stem().string() + "_" + to_string(i+1) + ".AR";
-				string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + ".DR";
-                boost::filesystem::path aout_path = dir_path / "out" / afilename;
-				boost::filesystem::path dout_path = dir_path / "out" / dfilename;
-				out_streams[i<<1].open(dout_path.string().c_str());
-				out_streams[i<<1|1].open(aout_path.string().c_str());
-				out_paths[i<<1] = dout_path;
-				out_paths[i<<1|1] = aout_path;
+				ifstream dat_stream(itor->path().string().c_str(), ios::binary);
+				vector<ofstream> out_streams(10);
+				vector<boost::filesystem::path> out_paths(10);
 
-			}
-
-			// read data
-			all data_all;
-            real data_real;
-			vector<int> counts(5); 
-			vector<vector<single_real>> reals(5, vector<single_real>());
-			vector<int> midxs(5,0);
-			while(dat_stream.read((char*)&data_all, sizeof(data_all)))
-			{
-				// 读取数据
-				swap(data_real, data_all);
-				for(int i=0;i<5;++i){
-					// if(in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
-					if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
-					{
-						reals[i].push_back({data_real.poin[i], data_real.alt[i], counts[i], data_real.t1, data_real.t2});
-						if(reals[i][midxs[i]].p.lat > data_real.poin[i].lat){
-							midxs[i] = counts[i];
+				// read data
+				all data_all;
+				real data_real;
+				vector<int> counts(5); 
+				vector<vector<single_real>> reals(5, vector<single_real>());
+				vector<int> midxs(5,0);
+				while(dat_stream.read((char*)&data_all, sizeof(data_all)))
+				{
+					// 读取数据
+					swap(data_real, data_all);
+					for(int i=0;i<5;++i){
+						// if(in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
+						if(data_all.b[i].radius!=-1 && (data_real.alt[i] < 11) && (data_real.alt[i] > -10) && in_area(data_real.poin[i].lon, data_real.poin[i].lat, lon_down, lon_up, lat_down, lat_up))
+						{
+							reals[i].push_back({data_real.poin[i], data_real.alt[i], counts[i], data_real.t1, data_real.t2});
+							if(reals[i][midxs[i]].p.lat > data_real.poin[i].lat){
+								midxs[i] = counts[i];
+							}
+							++counts[i];
 						}
-						++counts[i];
 					}
 				}
-			}
 
-			// write data
-			for(int i=0; i<5; ++i){
-				int n = reals[i].size();
-				if(n<100) continue;
-				for(int j = 0;j<n;++j){
-					if(j<=midxs[i]){
-						out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" " << reals[i][j].t2/153390080<< endl;						
-					}else{
-						out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 << " " <<reals[i][j].t2/153390080<< endl;						
+				// open stream
+				for(int i=0; i<5; ++i){
+					int n = reals[i].size();
+					if(n<100) continue;
+					string afilename = itor->path().stem().string() + "_" + to_string(i+1) + ".AR";
+					string dfilename = itor->path().stem().string() + "_" + to_string(i+1) + ".DR";
+					boost::filesystem::path aout_path = dir_path / dirname / afilename;
+					boost::filesystem::path dout_path = dir_path / dirname / dfilename;
+					out_streams[i<<1].open(dout_path.string().c_str());
+					out_streams[i<<1|1].open(aout_path.string().c_str());
+					out_paths[i<<1] = dout_path;
+					out_paths[i<<1|1] = aout_path;
+
+				}
+
+				// write data
+				for(int i=0; i<5; ++i){
+					int n = reals[i].size();
+					if(n<100) continue;
+					for(int j = 0;j<n;++j){
+						if(j<=midxs[i]){
+							out_streams[i<<1|1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 <<" " << reals[i][j].t2/153390080<< endl;						
+						}else{
+							out_streams[i<<1] << fixed << setprecision(7)  << reals[i][j].p.lon << " " << reals[i][j].p.lat << " " << reals[i][j].alt << " " << reals[i][j].t1 << " " <<reals[i][j].t2/153390080<< endl;						
+						}
 					}
 				}
-			}
 
-			// close stream
-			for(int i=0; i<5; ++i){
-				#ifdef DEBUG 
-					if(counts[i] > 100)
-						cout << "DEBUG: read: " << i << " " << counts[i] << " " << midxs[i] << endl;
-				#endif
-				out_streams[i<<1].clear();
-				out_streams[i<<1|1].clear();
-				out_streams[i<<1].close();
-				out_streams[i<<1|1].close();
-				// quailty control remove some file
-				if(counts[i] < 100){
-					boost::filesystem::remove(out_paths[i<<1]);
-					boost::filesystem::remove(out_paths[i<<1|1]);
+				// close stream
+				for(int i=0; i<5; ++i){
+					#ifdef DEBUG 
+						if(counts[i] > 100)
+							cout << "DEBUG: read: " << i << " " << counts[i] << " " << midxs[i] << endl;
+					#endif
+					int n = reals[i].size();
+					if(n<100) continue;
+					out_streams[i<<1].clear();
+					out_streams[i<<1|1].clear();
+					out_streams[i<<1].close();
+					out_streams[i<<1|1].close();
+					// quailty control remove some file
+					if(counts[i] < 100){
+						boost::filesystem::remove(out_paths[i<<1]);
+						boost::filesystem::remove(out_paths[i<<1|1]);
+					}
+					if(midxs[i] <= 5){
+						boost::filesystem::remove(out_paths[i<<1|1]);
+					}
+					if(midxs[i] >= counts[i] - 5){
+						boost::filesystem::remove(out_paths[i<<1]);
+					}
 				}
-				if(midxs[i] <= 5){
-					boost::filesystem::remove(out_paths[i<<1|1]);
-				}
-				if(midxs[i] >= counts[i] - 5){
-					boost::filesystem::remove(out_paths[i<<1]);
-				}
-			}
-			dat_stream.clear();
-			dat_stream.close();
-            // cout << endl;
-        }
-
+				dat_stream.clear();
+				dat_stream.close();
+				++count;
+				// cout << endl;
+        	});
+		}
     }
-    return 0;
+    
+	// 启动输出显示
+	pool.commit([&](){
+		this_thread::sleep_for(chrono::milliseconds(500));
+		if(count == fileCount) return;
+		cout << "Read: " << count << "/" << fileCount << "\r";
+	});
+	
+	return 0;
 }
