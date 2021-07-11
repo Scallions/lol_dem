@@ -22,4 +22,4 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig("figs/out.png")  
+fig.savefig(f"figs/{NAME}_out.png")  
