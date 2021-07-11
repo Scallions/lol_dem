@@ -73,13 +73,13 @@ if PY_ADJ:
                 plt.scatter(cp[0], cp[1], color='g')
                 # print(cp[2],cp[3])
                 dhs.append(cp[2:])
-    plt.savefig("figs/crossover.png")
+    plt.savefig(f"figs/{NAME}_crossover.png")
 
     plt.close()
     dhs = np.array(dhs)
     print(len(dhs), count)
     plt.hist(dhs[:,0] - dhs[:,1], bins=100)
-    plt.savefig("figs/cs_hist.png")
+    plt.savefig(f"figs/{NAME}_cs_hist.png")
     print(np.abs(dhs[:,0] - dhs[:,1]).mean())
     # print((dhs[:,0] - dhs[:,1]).mean())
     dhs = dhs[np.abs(dhs[:,0]-dhs[:,1])<0.008,:]
@@ -93,10 +93,10 @@ else:
         Cfile = "crossoverC.txt"
     cross = pd.read_csv(os.path.join(DIR,Ofile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.scatter(cross["lon"], cross["lat"], color='g')
-    plt.savefig("figs/crossover.png")
+    plt.savefig(f"figs/{NAME}_crossover.png")
     plt.close()
     plt.hist(cross["alt"], bins=100)
-    plt.savefig("figs/cs_hist.png")
+    plt.savefig(f"figs/{NAME}_cs_hist.png")
     plt.close()
     print("MAE: ", cross["alt"].abs().mean())
     print("STD: ", cross["alt"].std())
@@ -104,7 +104,7 @@ else:
     print(cross.sort_values("dlt", ascending=False).head())
     cross1 = pd.read_csv(os.path.join(DIR,Cfile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.hist(cross1["alt"], bins=100)
-    plt.savefig("figs/adj1_hist.png")
+    plt.savefig(f"figs/{NAME}_adj1_hist.png")
     print("MAE: ", cross1["alt"].abs().mean())
     print("STD: ", cross1["alt"].std())
     cross1["dlt"] = cross1["alt"].abs()
@@ -116,7 +116,7 @@ else:
     plt.hist(cross["alt"], bins=bins, alpha=0.3, density=False, label="raw")
     plt.hist(cross1["alt"], bins=bins, alpha=0.3, density=False, label="adj")
     plt.legend()
-    plt.savefig("figs/hist.png")
+    plt.savefig(f"figs/{NAME}_hist.png")
 
      
     

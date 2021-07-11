@@ -51,7 +51,7 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig("figs/s_scan_gmt.png")  
+fig.savefig(f"figs/{NAME}_s_scan_gmt.png")  
 
 
 ## matplot
@@ -61,5 +61,5 @@ for orbit in aorbits:
     plt.plot(orbit[:,0], orbit[:,1])
 for orbit in dorbits:
     plt.plot(orbit[:,0], orbit[:,1])
-plt.savefig("figs/s_scan_plt.png")
+plt.savefig(f"figs/{NAME}_s_scan_plt.png")
 

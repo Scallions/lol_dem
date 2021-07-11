@@ -186,7 +186,7 @@ x = X
 # print("After adj: ", np.abs(v[0::2] - v[1::2]).mean(), np.std(v[0::2] - v[1::2]))
 
 plt.hist(v, bins=100)
-plt.savefig("figs/adj_hist.png")
+plt.savefig(f"figs/{NAME}_adj_hist.png")
 
 
 
