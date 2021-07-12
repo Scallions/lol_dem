@@ -1,14 +1,14 @@
 add_rules("mode.debug", "mode.release")
 
-add_requires("boost")
+-- add_requires("boost")
 
 target("read_data")
     set_kind("binary")
     add_files("src/*.cpp")
-    add_packages("boost")
-    on_load(function (target)
-        target:add(find_packages("boost", "pthread"))
-    end)
+    -- add_packages("boost")
+    -- on_load(function (target)
+    --     target:add(find_packages("boost", "pthread"))
+    -- end)
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

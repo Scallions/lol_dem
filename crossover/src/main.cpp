@@ -8,6 +8,7 @@
 //#include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <cmath>
 #include <vector>
 //#include <stdlib.h>
