@@ -17,10 +17,6 @@
 
 using namespace std;
 
-inline double min(double a,double b){a<b?a:b;}
-inline double max(double a,double b){a>b?a:b;}
-
-
 // 点数据
 struct point
 {
@@ -38,16 +34,10 @@ struct crosspoint
 	string f1, f2;
 };
 
-
-
 // Deprecated
 // struct cross_line{
 // 	string  f1, f2;
 // };
-
-
-
-
 
 double mult(point a, point b, point c)      //??
 {
@@ -111,9 +101,6 @@ crosspoint intersection(point u1, point u2, point v1, point v2)                 
 }
 
 double distan(point a, point b){
-	// np.arccos(np.cos(p1[1]) * np.cos(p2[1]) * np.cos(p1[0] - p2[0]) + np.sin(p1[1])*np.sin(p2[1]))
-	// acos(cos(a.lat) * cos(b.lat) * cos(a.lon - b.lon) + sin(a.lat) * sin(b.lat))
-	// double d = sqrt((a.lat - b.lat)*(a.lat - b.lat) + (a.lon - b.lon)*(a.lon - b.lon));
 	double t = 3.1415926/180;
 	double d = acos(cos(a.lat*t) * cos(b.lat*t) * cos(a.lon*t - b.lon*t) + sin(a.lat*t) * sin(b.lat*t));
 	return d;
@@ -130,19 +117,10 @@ double insert_h(point r1, point r2, crosspoint& p_r){
 }
 
 crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int begin1, int end1, int begin2, int end2, bool &tag){
-    /*
-    l1 : line1 point
-    l2 : line2 point
-    begin1 : line1 start index
-    end1 : line1 end index
-    ...
-    tag : ?
-    */
 	point line1[11];
 	point line2[11];
 	int gap1, gap2;
     if(end1 < 2 || end2 < 2){
-        // cout << "error" << endl;
         crosspoint p_w = { -999, -999, -999 };
         return p_w;
     }
@@ -150,10 +128,6 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 	while ((end1 - begin1) > 10 || (end2 - begin2) > 10){
 		num++;
 		
-		
-
-		//ofstream out(to_string(num).c_str());
-        // resample lines to 11 points, reduce complete time
 		if ((end1 - begin1) > 10){
 			gap1 = (end1 - begin1) / 10;
 			for (int i = 0; i <= 10; i++){
@@ -162,7 +136,6 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 					break;
 				}
 				line1[i] = l1[begin1 + i*gap1];
-				//out << fixed << setprecision(7) << line1[i].lon << " " << line1[i].lat << endl;
 			}
 		}
 
@@ -174,12 +147,9 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 					break;
 				}
 				line2[i] = l2[begin2 + i*gap2];
-				//out << fixed << setprecision(7) << line2[i].lon << " " << line2[i].lat << endl;
 			}
 		}
 
-		//out.close();
-		
         // update begine end to some range
 		if ((end1 - begin1) > 10){
 			if ((end2 - begin2) > 10){
@@ -226,15 +196,9 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				}
 			}
 		}
-		
-		//cout << num << endl;
-		//cout << begin1 << " " << end1 << " " << begin2 << " " << end2 << endl;
 
 		if (num >= 10){
-			// cout << "??????" << endl;
 			break;
-			/*point p_w = { -999, -999, -999 };
-			return p_w;*/
 		}
 	}
 
@@ -260,7 +224,6 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 			}			
 		}
 	}
-	// cout << "error" << endl;
 	crosspoint p_w = { -999, -999, -999 , -1, -1, -1};
 	return p_w;
 
@@ -272,8 +235,6 @@ crosspoint get_crossover(const string &f1, const string &f2, map<string, vector<
 
 	vector<point> l1 = lmap[f1];
 	vector<point> l2 = lmap[f2];
-
-
 
 	crosspoint cp =  calc_crossover(l1, l2,0,l1.size()-1,0,l2.size()-1, tag);
 	cp.f1 = f1;
@@ -312,10 +273,6 @@ int main(int argc, char** argv)
         cout << "Directory doesn't exists: " << dir_path << endl;
         return 1;
     }
-    // if(!boost::filesystem::exists(dir_path / "out"))  //推断文件存在性
-    // {
-    //     boost::filesystem::create_directory(dir_path / "out");
-    // }
 
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "       Start crossover        " << endl;
@@ -365,26 +322,18 @@ int main(int argc, char** argv)
 	crosspoint crossover;
 	// multiple thread
 	vector<future<crosspoint>> result_fs;
-	threadpool pool(48);
+	ThreadPool pool(48);
 
 	boost::filesystem::path out_path = dir_path / ("crossover" + ext + ".txt");
 	ofstream result(out_path.string().c_str());
-	// ofstream result_s((out_path.string() + "f").c_str());
     int nums = afilepaths.size();
 	cout << "Finding crossover." << endl;
 	for(int i=0; i<afilepaths.size(); i++){
 		for(int j=0; j<dfilepaths.size(); j++){
-			result_fs.emplace_back(pool.commit([&afilepaths, &dfilepaths, i, j, &lmap]() {
-				return get_crossover(afilepaths[i], dfilepaths[j], lmap);
-			}));
-			// tag = false;
-			// crossover = get_crossover(afilepaths[i], dfilepaths[j], tag);
-			// if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
-			// if (tag == true){
-			// 	result<< fixed << setprecision(7) << afilepaths[i] <<" "<< dfilepaths[j]<<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
-			// }
+			result_fs.emplace_back(pool.enqueue([&lmap](string f1, string f2) {
+				return get_crossover(f1, f2, lmap);
+			}, afilepaths[i], dfilepaths[j]));
 		}
-		// cout << "\r" << i << "/" << nums << flush;
 	}
 	cout << "\tTask size: " << result_fs.size() << endl;
 	int count_t = 0;
@@ -399,11 +348,6 @@ int main(int argc, char** argv)
 	cout << "\tFind crosspoint: " << count_t << endl;
     result.close();
 	cout << endl;
-	/////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-
-
-
 	return 0;
 }
 

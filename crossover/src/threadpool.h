@@ -1,116 +1,98 @@
-#pragma once
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
 #include <vector>
 #include <queue>
-#include <atomic>
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <future>
-//#include <condition_variable>
-//#include <thread>
-//#include <functional>
+#include <functional>
 #include <stdexcept>
 
-namespace std
-{
-//???????,???????
-#define  THREADPOOL_MAX_NUM 16
-//#define  THREADPOOL_AUTO_GROW
-
-//???,??????????????????????,?????????
-//??????????, ??????????????,Opteron()???
-class threadpool
-{
-	using Task = function<void()>;	//????
-	vector<thread> _pool;     //???
-	queue<Task> _tasks;            //????
-	mutex _lock;                   //??
-	condition_variable _task_cv;   //????
-	atomic<bool> _run{ true };     //???????
-	atomic<int>  _idlThrNum{ 0 };  //??????
-
+class ThreadPool {
 public:
-	inline threadpool(unsigned short size = 4) { addThread(size); }
-	inline ~threadpool()
-	{
-		_run=false;
-		_task_cv.notify_all(); // ????????
-		for (thread& thread : _pool) {
-			//thread.detach(); // ?????????
-			if(thread.joinable())
-				thread.join(); // ??????? ???????????
-		}
-	}
-
-public:
-	// ??????
-	// ??.get()?????????????,?????
-	// ???????????????
-	// ?????   bind? .commit(std::bind(&Dog::sayHello, &dog));
-	// ????   mem_fn? .commit(std::mem_fn(&Dog::sayHello), this)
-	template<class F, class... Args>
-	auto commit(F&& f, Args&&... args) ->future<decltype(f(args...))>
-	{
-		if (!_run)    // stoped ??
-			throw runtime_error("commit on ThreadPool is stopped.");
-
-		using RetType = decltype(f(args...)); // typename std::result_of<F(Args...)>::type, ?? f ??????
-		auto task = make_shared<packaged_task<RetType()>>(
-			bind(forward<F>(f), forward<Args>(args)...)
-		); // ????????,??(??)
-		future<RetType> future = task->get_future();
-		{    // ???????
-			lock_guard<mutex> lock{ _lock };//?????????  lock_guard ? mutex ? stack ????????? lock()?????? unlock()
-			_tasks.emplace([task](){ // push(Task{...}) ??????
-				(*task)();
-			});
-		}
-#ifdef THREADPOOL_AUTO_GROW
-		if (_idlThrNum < 1 && _pool.size() < THREADPOOL_MAX_NUM)
-			addThread(1);
-#endif // !THREADPOOL_AUTO_GROW
-		_task_cv.notify_one(); // ????????
-
-		return future;
-	}
-
-	//??????
-	int idlCount() { return _idlThrNum; }
-	//????
-	int thrCount() { return _pool.size(); }
-#ifndef THREADPOOL_AUTO_GROW
+    ThreadPool(size_t);
+    template<class F, class... Args>
+    auto enqueue(F&& f, Args&&... args) 
+        -> std::future<typename std::result_of<F(Args...)>::type>;
+    ~ThreadPool();
 private:
-#endif // !THREADPOOL_AUTO_GROW
-	//?????????
-	void addThread(unsigned short size)
-	{
-		for (; _pool.size() < THREADPOOL_MAX_NUM && size > 0; --size)
-		{   //??????,???? ????? THREADPOOL_MAX_NUM
-			_pool.emplace_back( [this]{ //??????
-				while (_run)
-				{
-					Task task; // ???????? task
-					{
-						// unique_lock ?? lock_guard ????????? unlock() ? lock()
-						unique_lock<mutex> lock{ _lock };
-						_task_cv.wait(lock, [this]{
-								return !_run || !_tasks.empty();
-						}); // wait ??? task
-						if (!_run && _tasks.empty())
-							return;
-						task = move(_tasks.front()); // ??????????? task
-						_tasks.pop();
-					}
-					_idlThrNum--;
-					task();//????
-					_idlThrNum++;
-				}
-			});
-			_idlThrNum++;
-		}
-	}
+    // need to keep track of threads so we can join them
+    std::vector< std::thread > workers;
+    // the task queue
+    std::queue< std::function<void()> > tasks;
+    
+    // synchronization
+    std::mutex queue_mutex;
+    std::condition_variable condition;
+    bool stop;
 };
+ 
+// the constructor just launches some amount of workers
+inline ThreadPool::ThreadPool(size_t threads)
+    :   stop(false)
+{
+    for(size_t i = 0;i<threads;++i)
+        workers.emplace_back(
+            [this]
+            {
+                for(;;)
+                {
+                    std::function<void()> task;
 
+                    {
+                        std::unique_lock<std::mutex> lock(this->queue_mutex);
+                        this->condition.wait(lock,
+                            [this]{ return this->stop || !this->tasks.empty(); });
+                        if(this->stop && this->tasks.empty())
+                            return;
+                        task = std::move(this->tasks.front());
+                        this->tasks.pop();
+                    }
+
+                    task();
+                }
+            }
+        );
 }
 
-#endif  //https://github.com/lzpong/
+// add new work item to the pool
+template<class F, class... Args>
+auto ThreadPool::enqueue(F&& f, Args&&... args) 
+    -> std::future<typename std::result_of<F(Args...)>::type>
+{
+    using return_type = typename std::result_of<F(Args...)>::type;
+
+    auto task = std::make_shared< std::packaged_task<return_type()> >(
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+        );
+        
+    std::future<return_type> res = task->get_future();
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+
+        // don't allow enqueueing after stopping the pool
+        if(stop)
+            throw std::runtime_error("enqueue on stopped ThreadPool");
+
+        tasks.emplace([task](){ (*task)(); });
+    }
+    condition.notify_one();
+    return res;
+}
+
+// the destructor joins all threads
+inline ThreadPool::~ThreadPool()
+{
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        stop = true;
+    }
+    condition.notify_all();
+    for(std::thread &worker: workers)
+        worker.join();
+}
+
+#endif
