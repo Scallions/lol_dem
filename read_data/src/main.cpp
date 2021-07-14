@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 	cout << "\tRead area: " << lon_down << "," << lon_up << "," << lat_down << "," << lat_up << endl;
 
     boost::filesystem::recursive_directory_iterator itEnd;
-	threadpool pool(48);
+	ThreadPool pool(48);
 
 
 
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
         {
 			++fileCount;
 			boost::filesystem::path data_path = itor->path();
-			pool.commit([&, data_path](){
+			pool.enqueue([&, data_path](){
 				// LOG << "Reading: " << itor->path().string() << "\n";
 				// cout << "Reading: " << itor->path().string() << endl;
 
