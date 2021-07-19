@@ -10,6 +10,7 @@ import pygmt
 from pykrige.ok import OrdinaryKriging
 from pykrige.uk import UniversalKriging
 from pykrige.rk import RegressionKriging
+import random
 
 import tool
 from constant import *
@@ -42,9 +43,11 @@ else:
 data = datas
 
 ## imputation
-lons = data["lon"].values[::10000]
-lats = data["lat"].values[::10000]
-alts = data["alt"].values[::10000]
+n = len(data)
+idxs = random.sample(range(n), n//1000)
+lons = data["lon"].values[idxs]
+lats = data["lat"].values[idxs]
+alts = data["alt"].values[idxs]
 grid_lon = np.linspace(min(lons),max(lons),2000)
 grid_lat = np.linspace(min(lats),max(lats),2000)
 OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")
