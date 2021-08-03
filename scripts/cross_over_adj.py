@@ -64,17 +64,23 @@ for k in fmap:
         datas = cross[cross["f2"] == k]
         ts = datas["td"]
     xs = datas["alt"]
-    ts = ts.to_numpy()
-    ts = ts - ts[0]
-    lens = len(xs)
-    A = np.ones((lens, 2))
-    A[:,0] = ts
-    y = xs.to_numpy()
-    if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
-        logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
-    try:
-        x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
-    except LinAlgError as e:
+    # TODO: 根据 alt 的大小来初始化，超过阈值进行初始值设置
+    if xs.abs().mean() > 0.5:
+        ts = ts.to_numpy()
+        ts = ts - ts[0]
+        lens = len(xs)
+        A = np.ones((lens, 2))
+        A[:,0] = ts
+        y = xs.to_numpy()
+        if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
+            logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
+        try:
+            x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
+        except LinAlgError as e:
+            x = np.zeros((2,1))
+    else:
+        x = np.zeros((2,1))
+    if np.isnan(x).sum() > 0:
         x = np.zeros((2,1))
     if v >= la:
         X[2*v] = -x[1]
@@ -85,8 +91,10 @@ for k in fmap:
 
 X = sp.dok_matrix(X)
 # simpling
-# TODO: 根据数量调整，而不是直接确定倍数
-cross = cross.loc[::100,:]
+# TODO: 根据数量调整，而不是直接确定倍数,采样
+n = len(cross)
+if n > 100000:
+    cross = cross.loc[::1000,:]
 lc = len(cross)
 
 
@@ -259,8 +267,8 @@ if FUSE:
 else:
     for orbit, file_ in aorbits:
         i = fmap[file_]
-        x0 = x[2*i]
-        x1 = x[2*i+1]
+        x0 = x[2*i,0]
+        x1 = x[2*i+1,0]
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
@@ -270,8 +278,8 @@ else:
 
     for orbit, file_ in dorbits:
         i = fmap[file_]
-        x0 = x[2*i]
-        x1 = x[2*i+1]
+        x0 = x[2*i,0]
+        x1 = x[2*i+1,0]
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
