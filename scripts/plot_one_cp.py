@@ -3,17 +3,25 @@ import pandas as pd
 import pygmt
 import numpy as np
 import tool
+import os
 
 
 afiles = ["data/2,22,-86,-84/LOLARDR_183451027_3.AO", "data/2,22,-86,-84/LOLARDR_111470042_3.AO", "data/2,22,-86,-84/LOLARDR_101561255_3.AO"]
 # afiles = ["data/2,22,-86,-84/LOLARDR_111470042_3.AO"]
-dfiles = ["data/2,22,-86,-84/LOLARDR_152231910_3.DO"]
+dfiles = ["data/2,22,-86,-84/LOLARDR_152231910_3.DC"]
+cp_fp = "crossoverO.txt" # 交叉点文件信息
+# 读取到pandas中
+df = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "didx", "atime", "dtime", "lon", "lat", "dalt"], sep=" ")
+temp = df[df["dorbit"] == "data/2,22,-86,-84/LOLARDR_152231910_3.DO"].sort_values(by="dtime")
 
 aorbits = []
 dorbits = []
 
-for file_ in afiles:
-    data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
+# for file_ in afiles:
+#     data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
+#     aorbits.append(data)
+for i, row in temp.iterrows():
+    data = tool.read_data(row["aorbit"])[['lon','lat','alt']].to_numpy()
     aorbits.append(data)
 for file_ in dfiles:
     data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
@@ -35,8 +43,7 @@ pygmt.makecpt(cmap="geo", series=[datas.alt.min()-1, datas.alt.max()+1])
 fig.plot(
     x=datas.lon,
     y=datas.lat,
-#     sizes=0.02 * 2 ** data.magnitude,
-    sizes = np.ones_like(datas.lon)*0.02,
+    size = np.ones_like(datas.lon)*0.02,
     color=datas.alt,
     cmap=True,
     style="cc",
