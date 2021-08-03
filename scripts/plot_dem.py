@@ -44,13 +44,26 @@ data = datas
 
 ## imputation
 n = len(data)
-idxs = random.sample(range(n), n//1000)
-lons = data["lon"].values[idxs]
-lats = data["lat"].values[idxs]
-alts = data["alt"].values[idxs]
-grid_lon = np.linspace(min(lons),max(lons),2000)
-grid_lat = np.linspace(min(lats),max(lats),2000)
-OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")
+# TODO: 采样调整
+if n > 1000:
+    idxs = random.sample(range(n), n//1000)
+    lons = data["lon"].values[idxs]
+    lats = data["lat"].values[idxs]
+    alts = data["alt"].values[idxs]
+else:
+    lons = data["lon"].values
+    lats = data["lat"].values
+    alts = data["alt"].values
+
+# TODO: 0.25°一格
+lons_n = REGION[1] - REGION[0]
+lats_n = REGION[3] - REGION[2]
+lons_n = int(lons_n // 0.05)
+lats_n = int(lats_n // 0.001)
+grid_lon = np.linspace(min(lons),max(lons),lons_n)
+grid_lat = np.linspace(min(lats),max(lats),lats_n)
+# OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")
+OK = OrdinaryKriging(lons, lats, alts,coordinates_type="geographic")
 # OK = UniversalKriging(lons, lats, alts)
 # OK = RegressionKriging(lons, lats, alts,)
 # OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',nlags=6)

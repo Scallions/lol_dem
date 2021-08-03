@@ -211,7 +211,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				tag = true;
 				crosspoint p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
 				p_r.i = i, p_r.j = j;
-				point p_t = {p_r.lon, p_r.lat,0};
+				// point p_t = {p_r.lon, p_r.lat,0};
 				p_r.alt1 = insert_h(l1[i], l1[i + 1], p_r);
 				p_r.alt2 = insert_h(l2[j], l2[j + 1], p_r);
 				double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
@@ -240,6 +240,11 @@ crosspoint get_crossover(const string &f1, const string &f2, map<string, vector<
 	cp.f1 = f1;
 	cp.f2 = f2;
 	cp.tag = tag;
+
+	// 检查 nan
+	if(isnan(cp.ta) || isnan(cp.td) || isnan(cp.alt1) || isnan(cp.alt2)){
+		cp.tag = false;
+	}
 
 	return cp;
 
