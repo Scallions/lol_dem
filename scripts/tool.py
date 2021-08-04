@@ -97,3 +97,14 @@ def cross_point(A, B, C, D):
     ans.append(h1)
     ans.append(h2)
     return ans
+
+
+def get_height_in_dem(dem, lon, lat):
+    """
+    Args:
+        dem: xarray
+        lon: float 0 360
+        lat: float -90 90
+    """    
+
+    return dem.interp(lon=lon, lat=lat).item()
