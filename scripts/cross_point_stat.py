@@ -40,3 +40,5 @@ print(temp["dalt"].mean())
 # print(df[["aorbit", "dalt"]].groupby("aorbit").mean().abs().sort_values(by="dalt", ascending=False).head())
 
 # print(df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False).head()) 
+
+# TODO: 把最差的文件后缀改为 [A|D]W
