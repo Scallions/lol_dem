@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from scipy.optimize import lsq_linear
 import scipy.sparse as sp 
 import time
+import random
+# from scipy.sparse.construct import random
 
 import tool
 from constant import *
@@ -18,6 +20,7 @@ fmap = {}
 i = 0
 
 
+## load orbit
 
 if FUSE:
     for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AFO")):
@@ -42,59 +45,61 @@ else:
         fmap[file_] = i
         i += 1
 
-la = len(aorbits)
-ld = len(dorbits)
+la = len(aorbits) # 升轨数量
+ld = len(dorbits)   # 降轨数量
 print(f"ascend orbits: {la}, dscend orbits: {ld}")
 
 
+## 加载交叉点信息
 if FUSE:
     cross = pd.read_csv(os.path.join(DIR,"crossoverFO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
 else:
     cross = pd.read_csv(os.path.join(DIR,"crossoverO.txt"), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
 
 
-# 初始化系数
-X = np.zeros(((la+ld)*2, 1))
-for k in fmap:
-    v = fmap[k]
-    if v < la:
-        datas = cross[cross["f1"] == k]
-        ts = datas["ta"]
-    else:
-        datas = cross[cross["f2"] == k]
-        ts = datas["td"]
-    xs = datas["alt"]
-    # TODO: 根据 alt 的大小来初始化，超过阈值进行初始值设置
-    if xs.abs().mean() > 0.5:
-        ts = ts.to_numpy()
-        ts = ts - ts[0]
-        lens = len(xs)
-        A = np.ones((lens, 2))
-        A[:,0] = ts
-        y = xs.to_numpy()
-        if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
-            logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
-        try:
-            x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
-        except LinAlgError as e:
-            x = np.zeros((2,1))
-    else:
-        x = np.zeros((2,1))
-    if np.isnan(x).sum() > 0:
-        x = np.zeros((2,1))
-    if v >= la:
-        X[2*v] = -x[1]
-        X[2*v+1] = -x[0]
-    else:
-        X[2*v] = x[1]
-        X[2*v+1] = x[0]
 
-X = sp.dok_matrix(X)
+# 初始化系数
+# X = np.zeros(((la+ld)*2, 1))
+# for k in fmap:
+#     v = fmap[k]
+#     if v < la:
+#         datas = cross[cross["f1"] == k]
+#         ts = datas["ta"]
+#     else:
+#         datas = cross[cross["f2"] == k]
+#         ts = datas["td"]
+#     xs = datas["alt"]
+#     # TODO: 根据 alt 的大小来初始化，超过阈值进行初始值设置
+#     if xs.abs().mean() > 0.5:
+#         ts = ts.to_numpy()
+#         ts = ts - ts[0]
+#         lens = len(xs)
+#         A = np.ones((lens, 2))
+#         A[:,0] = ts
+#         y = xs.to_numpy()
+#         if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
+#             logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
+#         try:
+#             x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
+#         except LinAlgError as e:
+#             x = np.zeros((2,1))
+#     else:
+#         x = np.zeros((2,1))
+#     if np.isnan(x).sum() > 0:
+#         x = np.zeros((2,1))
+#     if v >= la:
+#         X[2*v] = -x[1]
+#         X[2*v+1] = -x[0]
+#     else:
+#         X[2*v] = x[1]
+#         X[2*v+1] = x[0]
+
+# X = sp.dok_matrix(X)
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-if n > 100000:
-    cross = cross.loc[::1000,:]
+# if n // (la+ld) > 10:
+#     cross = cross.sample(10*(la+ld))
 lc = len(cross)
 
 
@@ -158,7 +163,7 @@ if False:
         A[2*i+1][2*di+1] = dt
     P = P / np.sum(P)
 else:
-    v = np.ones((lc,1))
+    v = np.ones((lc,))
     # A = np.zeros((lc, (la+ld)*2))
     # P = np.eye(lc)
     A = sp.dok_matrix((lc, (la+ld)*2))
@@ -196,18 +201,18 @@ print("Before: ", cross["alt"].abs().mean(), cross["alt"].std())
 # init x
 # TODO: 分别计算初始值
 start = time.time()
-# rhi = 2
+rhi = 2
 rhi1 = 2
 # # use scipy ?
 # # I = np.eye((la+ld)*2)
-# I = sp.identity((la+ld)*2)
-# if False:
-#     # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
-#     X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
-# else:
-#     # X = lsq_linear(A, v)
-#     X = sp.linalg.lsqr(A, v)
-#     X = X[0]
+I = sp.identity((la+ld)*2)
+if False:
+    # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
+    X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
+else:
+    # X = lsq_linear(A, v)
+    X = sp.linalg.lsqr(A, v) # 没有正则
+    X = X[0]
 print("Init: ", np.abs(v - A*X).mean(), np.std(v - A*X))
 
 # 间接平差
@@ -267,8 +272,8 @@ if FUSE:
 else:
     for orbit, file_ in aorbits:
         i = fmap[file_]
-        x0 = x[2*i,0]
-        x1 = x[2*i+1,0]
+        x0 = x[2*i]
+        x1 = x[2*i+1]
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
@@ -278,8 +283,8 @@ else:
 
     for orbit, file_ in dorbits:
         i = fmap[file_]
-        x0 = x[2*i,0]
-        x1 = x[2*i+1,0]
+        x0 = x[2*i]
+        x1 = x[2*i+1]
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")

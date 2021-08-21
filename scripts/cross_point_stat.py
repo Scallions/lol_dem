@@ -16,14 +16,29 @@ df = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "d
 # 按轨道进行统计
 acps = df[["aorbit", "dalt"]].groupby("aorbit").mean().abs().sort_values(by="dalt", ascending=False)
 dcps = df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False)
+## plot hist
+print(acps.head())
+print(acps.quantile(0.05), acps.quantile(0.9))
+print(dcps.head())
+print(dcps.quantile(0.05), dcps.quantile(0.9))
+
+plt.figure()
+acps.hist(bins=50)
+plt.savefig("figs/a_hist.png")
+plt.figure()
+dcps.hist(bins=50)
+plt.savefig("figs/d_hist.png")
+
 
 # TODO: 画出质量最差的轨道
-worst_afile = acps.index[0]
-temp = df[df["aorbit"] == worst_afile].sort_values(by="dtime")
-# print(worst_afile, acps[worst_afile])
-plt.scatter(temp["dtime"], temp["dalt"])
-plt.savefig(f"figs/worst_orbit.png")
-print(temp["dalt"].mean())
+if False:
+	worst_afile = acps.index[0]
+	temp = df[df["aorbit"] == worst_afile].sort_values(by="dtime")
+	print(worst_afile, acps[worst_afile])
+	plt.scatter(temp["dtime"], temp["dalt"])
+	plt.savefig(f"figs/worst_orbit.png")
+	print(temp["dalt"].mean())
+
 
 # 输出质量最差的几条轨道
 
