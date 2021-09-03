@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt 
 from scipy.optimize import lsq_linear
 import scipy.sparse as sp 
+import scipy.sparse.linalg
 import time
 import random
 # from scipy.sparse.construct import random
@@ -59,65 +60,49 @@ else:
 
 
 # 初始化系数
-# X = np.zeros(((la+ld)*2, 1))
-# for k in fmap:
-#     v = fmap[k]
-#     if v < la:
-#         datas = cross[cross["f1"] == k]
-#         ts = datas["ta"]
-#     else:
-#         datas = cross[cross["f2"] == k]
-#         ts = datas["td"]
-#     xs = datas["alt"]
-#     # TODO: 根据 alt 的大小来初始化，超过阈值进行初始值设置
-#     if xs.abs().mean() > 0.5:
-#         ts = ts.to_numpy()
-#         ts = ts - ts[0]
-#         lens = len(xs)
-#         A = np.ones((lens, 2))
-#         A[:,0] = ts
-#         y = xs.to_numpy()
-#         if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
-#             logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
-#         try:
-#             x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
-#         except LinAlgError as e:
-#             x = np.zeros((2,1))
-#     else:
-#         x = np.zeros((2,1))
-#     if np.isnan(x).sum() > 0:
-#         x = np.zeros((2,1))
-#     if v >= la:
-#         X[2*v] = -x[1]
-#         X[2*v+1] = -x[0]
-#     else:
-#         X[2*v] = x[1]
-#         X[2*v+1] = x[0]
+if False:
+    X = np.zeros(((la+ld)*2, ))
+    for k in fmap:
+        v = fmap[k]
+        if v < la:
+            datas = cross[cross["f1"] == k]
+            ts = datas["ta"]
+        else:
+            datas = cross[cross["f2"] == k]
+            ts = datas["td"]
+        xs = datas["alt"]
+        # TODO: 根据 alt 的大小来初始化，超过阈值进行初始值设置
+        if xs.abs().mean() > 0.5:
+            ts = ts.to_numpy()
+            ts = ts - ts[0]
+            lens = len(xs)
+            A = np.ones((lens, 2))
+            A[:,0] = ts
+            y = xs.to_numpy()
+            if np.isnan(y).sum() > 0 or np.isnan(ts).sum() > 0:
+                logger.error(f"detect nan: {k}, dalt: {np.isnan(y).sum()}, time: {np.isnan(ts).sum()}")
+            try:
+                x = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, y))
+            except LinAlgError as e:
+                x = np.zeros((2,1))
+        else:
+            x = np.zeros((2,1))
+        if np.isnan(x).sum() > 0:
+            x = np.zeros((2,1))
+        if v >= la:
+            X[2*v] = -x[1]
+            X[2*v+1] = -x[0]
+        else:
+            X[2*v] = x[1]
+            X[2*v+1] = x[0]
+    # X = sp.dok_matrix(X)
 
-# X = sp.dok_matrix(X)
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-# if n // (la+ld) > 10:
-#     cross = cross.sample(10*(la+ld))
+if n // (la+ld) > 4:
+    cross = cross.sample(int(3*(la+ld)))
 lc = len(cross)
-
-
-### find cross over point
-# cs = []
-# dhs = []
-# for i, (dorbit, dfile) in enumerate(dorbits):
-#     for j, (aorbit, afile) in enumerate(aorbits):
-#         k = len(aorbit)
-#         l = len(dorbit)
-#         ar, dr = tool.find_crossover(aorbit, dorbit, 0, k-1, 0, l-1)
-#         if ar!= -1:
-#             cp = tool.cross_point(aorbit[ar], aorbit[ar+1], dorbit[dr], dorbit[dr+1])
-#             if cp[0] == -1:
-#                 continue
-#             cs.append([i,j,ar,dr, cp[2]-cp[3]])
-#             dhs.append(cp[2:])
-
 
 # stda = cross.groupby(["f1"])["alt"].agg("std")
 # stdd = cross.groupby(["f2"])["alt"].agg("std")
@@ -191,6 +176,7 @@ else:
         A[i,2*di+1] = -dt
     P = P / np.sum(P)
     P = sp.diags(P)
+    # P = np.diag(P)
 
 
 # x = (A^TPA)^{-1} A^T P l
@@ -203,29 +189,55 @@ print("Before: ", cross["alt"].abs().mean(), cross["alt"].std())
 start = time.time()
 rhi = 2
 rhi1 = 2
-# # use scipy ?
-# # I = np.eye((la+ld)*2)
+# use scipy ?
+# I = np.eye((la+ld)*2)
 I = sp.identity((la+ld)*2)
-if False:
+# A = A.toarray()
+# v = sp.dok_matrix(v)
+Atp = A.T.dot(P)
+# Att = Atp.dot(A)
+Att = Atp.dot(A)
+# Adt = Att + rhi*I
+# Adt = np.linalg.inv(Adt)
+if True:
     # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
-    X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
+    # X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
+    # X = sp.linalg.spsolve(A.T*A+rhi*I, A.T*v)
+    # X = np.linalg.lstsq(Att, Atp.dot(v))[0]
+    # X = Adt.dot(Atp.dot(v))
+    X = sp.linalg.lsmr(Att, Atp.dot(v))[0]
 else:
     # X = lsq_linear(A, v)
-    X = sp.linalg.lsqr(A, v) # 没有正则
-    X = X[0]
-print("Init: ", np.abs(v - A*X).mean(), np.std(v - A*X))
+    # X = sp.linalg.lsqr(A, v, show=True) 
+    X = sp.linalg.lsmr(A, v)[0]
+    # X = np.linalg.lstsq(A,v)
+    # X = sp.linalg.spsolve(A, v)
+res = v - A.dot(X)
+print("Init: ", np.abs(res).mean(), np.std(res))
 
 # 间接平差
-PX = sp.identity((la+ld)*2)
-for i in range(1):
+# PX = sp.identity((la+ld)*2)
+# Add = A.T.dot(P).dot(A) + rhi1*PX
+# Apd = Att + rhi1 * np.eye((la+ld)*2)
+# Apd = np.linalg.inv(Apd)
+for i in range(5):
     # L = v - np.dot(A, X)
-    L = v - A*X
+    L = v - A.dot(X)
     # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
     # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + rhi1 * np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
-    x = sp.linalg.inv(sp.csc_matrix(A.T * P * A + rhi1 * PX)) * A.T * P * L
+    # x = np.linalg.lstsq(Apd, Atp.dot(L))[0]
+    # x = Apd.dot(Atp.dot(L))
+    # x = sp.linalg.inv(sp.csc_matrix(A.T * P * A + rhi1 * PX)) * A.T * P * L
+    # x = sp.linalg.lsmr(A, L, show=True, maxiter=10)[0]
+    x = sp.linalg.lsmr(Att, Atp.dot(L))[0]
+    # x = np.linalg.lstsq(A.T.dot(A), A.T.dot(L))[0]
+    # x = sp.linalg.spsolve(Add, A.T.dot(L))
+    # x = sp.linalg.lsqr(Att, A.T.dot(L))
+    # x = sp.linalg.spsolve(A.T*P*A+rhi1*PX, A.T*L)
+    # x = sp.linalg.spsolve(A.T*P*A+rhi1*PX, A.T*P*L)
     X = X + x 
     # t = v - np.dot(A, X)
-    t = v - A*X
+    t = v - A.dot(X)
     print(f"After adj({i}): ", np.abs(t).mean(), np.std(t))
 
 end = time.time()
@@ -240,7 +252,6 @@ x = X
 # print("Before adj: ", np.abs(dhs[:,0] - dhs[:,1]).mean())
 
 # print("After adj: ", np.abs(v[0::2] - v[1::2]).mean(), np.std(v[0::2] - v[1::2]))
-
 plt.hist(v, bins=100)
 plt.savefig(f"figs/{NAME}_adj_hist.png")
 

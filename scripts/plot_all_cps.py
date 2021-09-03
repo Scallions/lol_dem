@@ -38,6 +38,6 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig("figs/all_cps.png")  
+fig.savefig(f"figs/{NAME}_all_cps.png")  
 
 logger.info("All over")

@@ -58,8 +58,8 @@ else:
 # TODO: 0.25°一格
 lons_n = REGION[1] - REGION[0]
 lats_n = REGION[3] - REGION[2]
-lons_n = int(lons_n // 0.05)
-lats_n = int(lats_n // 0.001)
+lons_n = int(lons_n // 0.008)
+lats_n = int(lats_n // 0.008)
 grid_lon = np.linspace(min(lons),max(lons),lons_n)
 grid_lat = np.linspace(min(lats),max(lats),lats_n)
 # OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")

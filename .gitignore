@@ -18,4 +18,5 @@ __pycache__
 figs/*
 
 data/
-config.ini
+# config.ini
+

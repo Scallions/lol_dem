@@ -14,20 +14,18 @@ df = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "d
 
 
 # 按轨道进行统计
-acps = df[["aorbit", "dalt"]].groupby("aorbit").mean().abs().sort_values(by="dalt", ascending=False)
-dcps = df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False)
+acps = df[["aorbit", "dalt"]].groupby("aorbit").std().sort_values(by="dalt", ascending=False)
+dcps = df[["dorbit", "dalt"]].groupby("dorbit").std().sort_values(by="dalt", ascending=False)
 ## plot hist
 print(acps.head())
-print(acps.quantile(0.05), acps.quantile(0.9))
 print(dcps.head())
-print(dcps.quantile(0.05), dcps.quantile(0.9))
 
 plt.figure()
 acps.hist(bins=50)
-plt.savefig("figs/a_hist.png")
+plt.savefig(f"figs/{NAME}_a_hist.png")
 plt.figure()
 dcps.hist(bins=50)
-plt.savefig("figs/d_hist.png")
+plt.savefig(f"figs/{NAME}_d_hist.png")
 
 
 # TODO: 画出质量最差的轨道

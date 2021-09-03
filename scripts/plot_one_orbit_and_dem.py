@@ -26,15 +26,17 @@ cp_fp = "crossoverO.txt" # 交叉点文件信息
 df = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "didx", "atime", "dtime", "lon", "lat", "dalt"], sep=" ")
 
 # 按轨道进行统计
-acps = df[["aorbit", "dalt"]].groupby("aorbit").mean().abs().sort_values(by="dalt", ascending=False)
-dcps = df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False)
+acps = df[["aorbit", "dalt"]].groupby("aorbit").std().sort_values(by="dalt", ascending=False)
+acps = df[["aorbit", "dalt"]].groupby("aorbit").std().sort_values(by="dalt", ascending=False)
+#dcps = df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False)
+#dcps = df[["dorbit", "dalt"]].groupby("dorbit").mean().abs().sort_values(by="dalt", ascending=False)
 
 # 获取质量最差的轨道名
 worst_afile = acps.index[0]
 
 # 获取交叉点信息
 cps = df[df["aorbit"] == worst_afile].sort_values(by="atime")
-logger.info(f"worst ascend orbit: {worst_afile}, MEAN: {cps.iloc[:,8].mean()}")
+logger.info(f"worst ascend orbit: {worst_afile}, MEAN: {cps.iloc[:,8].std()}")
 
 # 获取原始轨道
 orbit = tool.read_data(worst_afile)
@@ -52,7 +54,7 @@ for _, row in tqdm.tqdm(orbit.iterrows()):
 	dems.append(dem.interp(lon=row["lon"], lat=row["lat"]).item()/1000)
 
 plt.scatter(orbit["time"], dems, label="dem", s=0.5)
-plt.scatter(cps["atime"], cps["alt"], label="cp", s=0.5)
 plt.scatter(orbit["time"], orbit["alt"], label="raw", s=0.5)
+plt.scatter(cps["atime"], cps["alt"], label="cp", s=0.5)
 plt.legend()
-plt.savefig(f"figs/one_orbit_dem.png")
+plt.savefig(f"figs/{NAME}_one_orbit_dem.png")

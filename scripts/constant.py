@@ -29,6 +29,6 @@ REGION = [float(r) for r in REGION.split(",")]
 
 logger.info("load config")
 logger.info(f"""
-NAME: {NAME}
-DIR: {DIR}
+	NAME: {NAME}
+	DIR: {DIR}
 """)
