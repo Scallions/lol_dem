@@ -23,33 +23,29 @@ from constant import *
 aorbits = []
 dorbits = []
 datas = None
-if FUSE:
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AFC")):
-        data =  tool.read_data(file_)[['lon','lat','alt']]
-        if datas is None:
-            datas = data
-        else:
-            datas = pd.concat([datas, data],ignore_index=True)
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DFC")):
-        data =  tool.read_data(file_)[['lon','lat','alt']]
-        datas = pd.concat([datas, data],ignore_index=True) 
+if TYPE == 'O':
+    reg = r"LOLARDR_*.*O"
 else:
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AO")):
-        data =  tool.read_data(file_)[['lon','lat','alt']]
-        if datas is None:
-            datas = data
-        else:
-            datas = pd.concat([datas, data],ignore_index=True)
-    for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DO")):
-        data =  tool.read_data(file_)[['lon','lat','alt']]
+    reg = r"LOLARDR_*.*C"
+for file_ in glob.iglob(os.path.join(DIR, reg)):
+    data =  tool.read_data(file_)[['lon','lat','alt']]
+    if datas is None:
+        datas = data
+    else:
         datas = pd.concat([datas, data],ignore_index=True)
 data = datas
 
 ## imputation
 n = len(data)
+# TODO: 0.25°一格
+lons_n = REGION[1] - REGION[0]
+lats_n = REGION[3] - REGION[2]
+lons_n = int(lons_n // 0.008)
+lats_n = int(lats_n // 0.008)
+nn = lons_n * lats_n
 # TODO: 采样调整
-if n > 1000:
-    idxs = random.sample(range(n), n//1000)
+if n > 4 * nn:
+    idxs = random.sample(range(n), 4*nn)
     lons = data["lon"].values[idxs]
     lats = data["lat"].values[idxs]
     alts = data["alt"].values[idxs]
@@ -58,11 +54,6 @@ else:
     lats = data["lat"].values
     alts = data["alt"].values
 
-# TODO: 0.25°一格
-lons_n = REGION[1] - REGION[0]
-lats_n = REGION[3] - REGION[2]
-lons_n = int(lons_n // 0.008)
-lats_n = int(lats_n // 0.008)
 grid_lon = np.linspace(min(lons),max(lons),lons_n)
 grid_lat = np.linspace(min(lats),max(lats),lats_n)
 # OK = OrdinaryKriging(lons, lats, alts, variogram_model='hole-effect',coordinates_type="geographic")

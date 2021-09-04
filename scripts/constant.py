@@ -2,9 +2,16 @@ from pathlib import Path
 from loguru import logger
 import sys
 import configparser
+import argparse
 
 logger.remove()
 logger.add(sys.stdout, enqueue=True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-t', type=str, help='file type O or C, default O', default='O')
+args = parser.parse_args()
+
+TYPE = args.t
 
 config = configparser.ConfigParser()
 config.read("./config.ini")
@@ -31,4 +38,5 @@ logger.info("load config")
 logger.info(f"""
 	NAME: {NAME}
 	DIR: {DIR}
+	TYPE: {TYPE}
 """)

@@ -22,10 +22,10 @@ print(dcps.head())
 
 plt.figure()
 acps.hist(bins=50)
-plt.savefig(f"figs/{NAME}_a_hist.png")
+plt.savefig(f"figs/{NAME}/a_hist.png")
 plt.figure()
 dcps.hist(bins=50)
-plt.savefig(f"figs/{NAME}_d_hist.png")
+plt.savefig(f"figs/{NAME}/d_hist.png")
 
 
 # TODO: 画出质量最差的轨道

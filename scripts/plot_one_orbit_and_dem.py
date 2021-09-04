@@ -20,7 +20,7 @@ import xarray as xr
 import tqdm
 
 
-cp_fp = "crossoverO.txt" # 交叉点文件信息
+cp_fp = f"crossover{TYPE}.txt" # 交叉点文件信息
 
 # 读取到pandas中
 df = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "didx", "atime", "dtime", "lon", "lat", "dalt"], sep=" ")
@@ -57,4 +57,4 @@ plt.scatter(orbit["time"], dems, label="dem", s=0.5)
 plt.scatter(orbit["time"], orbit["alt"], label="raw", s=0.5)
 plt.scatter(cps["atime"], cps["alt"], label="cp", s=0.5)
 plt.legend()
-plt.savefig(f"figs/{NAME}_one_orbit_dem.png")
+plt.savefig(f"figs/{NAME}/one_orbit_dem_{TYPE}.png")

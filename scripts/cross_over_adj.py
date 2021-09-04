@@ -20,6 +20,10 @@ dorbits = []
 fmap = {}
 i = 0
 
+## config
+NUMPY = True
+INIT = False
+REG = False
 
 ## load orbit
 
@@ -48,7 +52,7 @@ else:
 
 la = len(aorbits) # 升轨数量
 ld = len(dorbits)   # 降轨数量
-print(f"ascend orbits: {la}, dscend orbits: {ld}")
+logger.info(f"ascend orbits: {la}, dscend orbits: {ld}")
 
 
 ## 加载交叉点信息
@@ -60,7 +64,8 @@ else:
 
 
 # 初始化系数
-if False:
+if INIT:
+    logger.info(f"init X with cps info")
     X = np.zeros(((la+ld)*2, ))
     for k in fmap:
         v = fmap[k]
@@ -101,6 +106,7 @@ if False:
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
 if n // (la+ld) > 4:
+    logger.info(f"sample cps")
     cross = cross.sample(int(3*(la+ld)))
 lc = len(cross)
 
@@ -109,8 +115,7 @@ lc = len(cross)
 
 # s = sum(stda) + sum(stdd)
 
-
-if False:
+if FUSE:
     v = np.ones((lc*2))
     A = np.zeros((lc*2, (la+ld)*2))
     P = np.eye(lc*2)
@@ -148,6 +153,7 @@ if False:
         A[2*i+1][2*di+1] = dt
     P = P / np.sum(P)
 else:
+    logger.info(f"construct A, P, v")
     v = np.ones((lc,))
     # A = np.zeros((lc, (la+ld)*2))
     # P = np.eye(lc)
@@ -175,61 +181,79 @@ else:
         A[i,2*di] = -1
         A[i,2*di+1] = -dt
     P = P / np.sum(P)
-    P = sp.diags(P)
-    # P = np.diag(P)
+    if NUMPY:
+        P = np.diag(P)
+    else:
+        P = sp.diags(P)
 
 
 # x = (A^TPA)^{-1} A^T P l
 # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + np.eye((la+ld)*2)), np.transpose(A)), v)
 # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + P), np.transpose(A)), v)
 
-print("Before: ", cross["alt"].abs().mean(), cross["alt"].std())
+print("Before: ", cross["alt"].mean(), cross["alt"].std())
 # init x
 # TODO: 分别计算初始值
 start = time.time()
 rhi = 2
 rhi1 = 2
 # use scipy ?
-# I = np.eye((la+ld)*2)
-I = sp.identity((la+ld)*2)
-# A = A.toarray()
-# v = sp.dok_matrix(v)
-Atp = A.T.dot(P)
+if NUMPY:
+    A = A.toarray()
+# Atp = A.T.dot(P)
 # Att = Atp.dot(A)
-Att = Atp.dot(A)
+Att = A.T.dot(A)
 # Adt = Att + rhi*I
 # Adt = np.linalg.inv(Adt)
-if True:
-    # X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
-    # X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
-    # X = sp.linalg.spsolve(A.T*A+rhi*I, A.T*v)
-    # X = np.linalg.lstsq(Att, Atp.dot(v))[0]
-    # X = Adt.dot(Atp.dot(v))
-    X = sp.linalg.lsmr(Att, Atp.dot(v))[0]
-else:
-    # X = lsq_linear(A, v)
-    # X = sp.linalg.lsqr(A, v, show=True) 
-    X = sp.linalg.lsmr(A, v)[0]
-    # X = np.linalg.lstsq(A,v)
-    # X = sp.linalg.spsolve(A, v)
+if not INIT:
+    logger.info(f"init X")
+    if REG:
+        if NUMPY:
+            I = np.eye((la+ld)*2)
+            X = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
+            # X = np.linalg.lstsq(Att, Atp.dot(v))[0]
+        else:
+            I = sp.identity((la+ld)*2)
+            # X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
+            X = sp.linalg.spsolve(A.T*A+rhi*I, A.T*v)
+        # X = Adt.dot(Atp.dot(v))
+        X = sp.linalg.lsmr(Att, A.T.dot(v))[0]
+    else:
+        if NUMPY:
+            X = np.linalg.lstsq(A,v)
+        else:
+            # X = lsq_linear(A, v)
+            # X = sp.linalg.lsqr(A, v, show=True) 
+            X = sp.linalg.lsmr(A, v)[0]
+            # X = sp.linalg.spsolve(A, v)
 res = v - A.dot(X)
-print("Init: ", np.abs(res).mean(), np.std(res))
+logger.info("Init: ", np.mean(res), np.std(res))
 
 # 间接平差
 # PX = sp.identity((la+ld)*2)
 # Add = A.T.dot(P).dot(A) + rhi1*PX
 # Apd = Att + rhi1 * np.eye((la+ld)*2)
 # Apd = np.linalg.inv(Apd)
-for i in range(5):
+logger.info(f"A's shape: {A.shape}")
+for i in range(1):
     # L = v - np.dot(A, X)
     L = v - A.dot(X)
-    # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
-    # x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + rhi1 * np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
-    # x = np.linalg.lstsq(Apd, Atp.dot(L))[0]
-    # x = Apd.dot(Atp.dot(L))
+    if REG:
+        if NUMPY:
+            x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
+            x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), np.dot(P,A)) + rhi1 * np.eye((la+ld)*2)), np.transpose(A)), np.dot(P,L))
+        else:
     # x = sp.linalg.inv(sp.csc_matrix(A.T * P * A + rhi1 * PX)) * A.T * P * L
+            pass 
+    else:
+        if NUMPY:
+            # x = np.linalg.lstsq(Apd, Atp.dot(L))[0]
+            x = np.linalg.lstsq(A, L)[0]
+            pass 
+        else:
+            x = sp.linalg.lsmr(Att, A.T.dot(L))[0]
+    # x = Apd.dot(Atp.dot(L))
     # x = sp.linalg.lsmr(A, L, show=True, maxiter=10)[0]
-    x = sp.linalg.lsmr(Att, Atp.dot(L))[0]
     # x = np.linalg.lstsq(A.T.dot(A), A.T.dot(L))[0]
     # x = sp.linalg.spsolve(Add, A.T.dot(L))
     # x = sp.linalg.lsqr(Att, A.T.dot(L))
@@ -238,10 +262,10 @@ for i in range(5):
     X = X + x 
     # t = v - np.dot(A, X)
     t = v - A.dot(X)
-    print(f"After adj({i}): ", np.abs(t).mean(), np.std(t))
+    logger.info(f"After adj({i}): ", np.mean(t), np.std(t))
 
 end = time.time()
-print("time: ", end-start)
+logger.info("time: ", end-start)
 
 x = X
 # x = lsq_linear(A, v, lsq_solver="exact")
@@ -253,7 +277,8 @@ x = X
 
 # print("After adj: ", np.abs(v[0::2] - v[1::2]).mean(), np.std(v[0::2] - v[1::2]))
 plt.hist(v, bins=100)
-plt.savefig(f"figs/{NAME}_adj_hist.png")
+plt.hist(res, bins=100)
+plt.savefig(f"figs/{NAME}/in_adj_hist.png")
 
 
 
@@ -289,7 +314,8 @@ else:
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
         t0 = orbit["t1"][0]
-        orbit["alt"] = orbit["alt"] - x0 - (orbit["t1"] - t0) * x1
+        t = orbit["t1"] + orbit["t2"] / 28 - t0
+        orbit["alt"] = orbit["alt"] - x0 - t * x1
         orbit.to_csv(f"{file_[:-3]}.AC", sep=" ", header = 0, index=0, float_format="%.7f")
 
     for orbit, file_ in dorbits:
@@ -300,5 +326,6 @@ else:
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
         t0 = orbit["t1"][0]
-        orbit["alt"] = orbit["alt"] - x0 - (orbit["t1"] - t0) * x1
+        t = orbit["t1"] + orbit["t2"] / 28 - t0
+        orbit["alt"] = orbit["alt"] - x0 - t * x1
         orbit.to_csv(f"{file_[:-3]}.DC", sep=" ", header = 0, index=0, float_format="%.7f")

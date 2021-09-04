@@ -18,7 +18,7 @@ for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.*O")), total=total):
 	t_e = data["t1"].iloc[-1] + data["t2"].iloc[-1] / 28
 	t_r = len(data)
 	t_c = (t_e - t_s) * 28
-	if t_r / t_c < 0.95:
+	if t_r / t_c < 0.99:
 		out = file_[:-1] + "D"
 		logger.info(f"rename file: {file_}")
 		try:

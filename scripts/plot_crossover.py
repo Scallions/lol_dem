@@ -93,10 +93,10 @@ else:
         Cfile = "crossoverC.txt"
     cross = pd.read_csv(os.path.join(DIR,Ofile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.scatter(cross["lon"], cross["lat"], color='g')
-    plt.savefig(f"figs/{NAME}_crossover.png")
+    plt.savefig(f"figs/{NAME}/crossover.png")
     plt.close()
     plt.hist(cross["alt"], bins=100)
-    plt.savefig(f"figs/{NAME}_cs_hist.png")
+    plt.savefig(f"figs/{NAME}/cs_hist.png")
     plt.close()
     print("BIAS: ", cross["alt"].mean())
     print("MAE: ", cross["alt"].abs().mean())
@@ -105,7 +105,7 @@ else:
     print(cross.sort_values("dlt", ascending=False).head())
     cross1 = pd.read_csv(os.path.join(DIR,Cfile), header=None, names=["f1","f2","c1","c2","ta","td","lon","lat","alt"], sep=r"\s+")
     plt.hist(cross1["alt"], bins=100)
-    plt.savefig(f"figs/{NAME}_adj1_hist.png")
+    plt.savefig(f"figs/{NAME}/adj_hist.png")
     print("BIAS: ", cross1["alt"].mean())
     print("MAE: ", cross1["alt"].abs().mean())
     print("STD: ", cross1["alt"].std())
@@ -118,7 +118,7 @@ else:
     plt.hist(cross["alt"], bins=bins, alpha=0.3, density=False, label="raw")
     plt.hist(cross1["alt"], bins=bins, alpha=0.3, density=False, label="adj")
     plt.legend()
-    plt.savefig(f"figs/{NAME}_hist.png")
+    plt.savefig(f"figs/{NAME}/hist.png")
 
      
     

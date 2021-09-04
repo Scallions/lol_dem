@@ -13,7 +13,7 @@ from loguru import logger
 
 # load data 
 logger.info("Load data")
-cp_fp = "crossoverO.txt" # 交叉点文件信息
+cp_fp = f"crossoverO{TYPE}.txt" # 交叉点文件信息
 datas = pd.read_csv(os.path.join(DIR, cp_fp), names=["aorbit", "dorbit", "aidx", "didx", "atime", "dtime", "lon", "lat", "dalt"], sep=" ")
 cut_size = 1e6 # 定义抽稀阈值
 cut_ratio = 100000/len(datas) # 定义抽稀率
@@ -38,6 +38,6 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig(f"figs/{NAME}_all_cps.png")  
+fig.savefig(f"figs/{NAME}/all_cps.png")  
 
 logger.info("All over")
