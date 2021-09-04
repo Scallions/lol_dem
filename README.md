@@ -52,6 +52,18 @@ region = 18,74,-89,-85
 ```
 根据需要在 `custom` 里面覆盖默认设置
 
+## 使用步骤 
+- read_data
+- remove outlier
+- rename track
+- crossover
+- remove cps
+- adj
+	- post crossover
+	- remove cps
+	- analysis
+- dem
+
 ## TODO
 - sparse matrix
 - multiple thread

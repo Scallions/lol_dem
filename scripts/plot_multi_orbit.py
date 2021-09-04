@@ -53,7 +53,7 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig(f"figs/{NAME}_morbits1.png")  
+fig.savefig(f"figs/{NAME}/morbits_raw.png")  
 
 for i in range(len(aorbits)):
     # aorbits[i][:,2] = i
@@ -86,7 +86,7 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig(f"figs/{NAME}_morbits.png")  
+fig.savefig(f"figs/{NAME}/morbits.png")  
 
 ## remove outfiler 
 aorbits = []
@@ -122,7 +122,7 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig(f"figs/{NAME}_morbits2.png")  
+fig.savefig(f"figs/{NAME}/morbits_filter.png")  
 
 ## adj 
 aorbits = []
@@ -159,4 +159,4 @@ fig.plot(
 #     pen="black",
 )
 fig.colorbar(frame='af+l"Elevation (km)"')
-fig.savefig(f"figs/{NAME}_morbits3.png")  
+fig.savefig(f"figs/{NAME}/morbits_adj.png")  

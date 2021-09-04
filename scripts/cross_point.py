@@ -8,5 +8,7 @@ region_str = [str(r) for r in REGION]
 # region_str = " ".join(region_str)
 
 # print(CMD, DIR, region_str)
-
-subprocess.run([CMD, DIR, *region_str])
+if TYPE == 'O':
+	subprocess.run([CMD, DIR, *region_str])
+else:
+	subprocess.run([CMD, DIR, *region_str, "C"])

@@ -206,7 +206,9 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 
 	for (int i = begin1; i < end1; i++){
 		for (int j = begin2; j < end2; j++){
-			if(l1[i+1].t1 - l1[i].t1 > 1 || l2[j+1].t1 - l2[j].t1 > 1) break;
+			double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
+			double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
+			if(ta > 5.0 / 28 || td > 5.0 / 28) break;
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
 				crosspoint p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
@@ -216,8 +218,6 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				p_r.alt2 = insert_h(l2[j], l2[j + 1], p_r);
 				double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
 				double dtd = (p_r.alt1 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
-				double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
-				double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
 				p_r.ta = l1[i].t1 + l1[i].t2/28.0 + ta*dta;
 				p_r.td = l2[j].t1 + l2[j].t2/28.0 + td*dtd;
 				return p_r;
