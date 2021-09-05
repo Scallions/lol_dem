@@ -14,8 +14,10 @@
 //#include <stdlib.h>
 #include <boost/filesystem.hpp>
 #include "threadpool.h"
+#include "progressbar.hpp"
 
 using namespace std;
+using namespace indicators;
 
 // 点数据
 struct point
@@ -342,12 +344,34 @@ int main(int argc, char** argv)
 	}
 	cout << "\tTask size: " << result_fs.size() << endl;
 	int count_t = 0;
+	ProgressBar bar{
+		option::BarWidth{100},
+		option::Start{"["},
+		option::Fill{"■"},
+		option::Lead{"■"},
+		option::Remainder{"-"},
+		option::End{" ]"},
+		option::ForegroundColor{Color::cyan},
+		option::PostfixText{"Finding crossover..."},
+		option::ShowElapsedTime{true},
+		option::ShowRemainingTime{true},
+		option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+	};
+	int count_all = result_fs.size();
+	int count_ct = 0;
 	for(auto && result_f: result_fs){
 		crossover = result_f.get();
 		// if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
 		if (crossover.tag == true){
 			result<< fixed << setprecision(7) << crossover.f1 <<" "<< crossover.f2 <<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
 			++count_t;
+		}
+		++count_ct;
+		if(count_ct % (count_all / 100) == 0){
+			bar.set_progress(count_ct * 100 / count_all);
+		}
+		if(count_ct == count_all){
+			bar.mark_as_completed();
 		}
 	}
 	cout << "\tFind crosspoint: " << count_t << endl;

@@ -45,8 +45,8 @@ data = datas
 # TODO: 0.25°一格
 lons_n = REGION[1] - REGION[0]
 lats_n = REGION[3] - REGION[2]
-lons_n = int(lons_n // 0.05)
-lats_n = int(lats_n // 0.01)
+lons_n = int(lons_n // 0.008)
+lats_n = int(lats_n // 0.008)
 ## imputation
 n = len(data)
 n_s = lons_n * lats_n
@@ -55,7 +55,7 @@ logger.info(f"data count: {n}, lons_n: {lons_n}, lats_n: {lats_n}")
 # TODO: 采样调整
 sample_rate = 2
 if n > sample_rate * n_s:
-    idxs = random.sample(range(n), n//(n//(sample_rate*n_s)))
+    idxs = random.sample(range(n), sample_rate*n_s)
     lons = data["lon"].values[idxs]
     lats = data["lat"].values[idxs]
     alts = data["alt"].values[idxs]
@@ -91,4 +91,4 @@ fig.grdimage(
 )
 fig.colorbar(frame=["a1000", "x+lElevation", "y+lm"])
 fig.show()
-fig.savefig(f"figs/{NAME}_dem.png")  
+fig.savefig(f"figs/{NAME}/dem_O.png")  

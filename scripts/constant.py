@@ -9,6 +9,7 @@ logger.add(sys.stdout, enqueue=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', type=str, help='file type O or C, default O', default='O')
+parser.add_argument('-k', type=str, help='region', default="")
 args = parser.parse_args()
 
 TYPE = args.t
@@ -18,6 +19,8 @@ config.read("./config.ini")
 
 # 配置文件选择
 key = config.defaults()["config"]
+if args.k != "" and key != "":
+	key = args.k
 
 # DIR = Path("./data/202,222,-86,-84")
 DIR = Path(config[key]["dir"])
