@@ -44,8 +44,9 @@ lons_n = int(lons_n // 0.008)
 lats_n = int(lats_n // 0.008)
 nn = lons_n * lats_n
 # TODO: 采样调整
-if n > 4 * nn:
-    idxs = random.sample(range(n), 4*nn)
+ratio = 0.1
+if n > ratio * nn:
+    idxs = random.sample(range(n), int(ratio*nn))
     lons = data["lon"].values[idxs]
     lats = data["lat"].values[idxs]
     alts = data["alt"].values[idxs]

@@ -43,6 +43,21 @@ def read_data(file_path):
         df = proc_df(df)
     return df
 
+def iqr(data, win=20, mean=False):
+    h = data['alt']
+    if mean:
+        h = h - h.rolling(win, min_periods=1, center=True).mean() 
+        q1 = h.quantile(0.25)
+        q3 = h.quantile(0.75)
+    else:
+        q1 = h.rolling(win, min_periods=1, center=True).quantile(0.25)
+        q3 = h.rolling(win, min_periods=1, center=True).quantile(0.75)
+    iqr = q3 - q1 
+    up = q3 + 1.5*iqr
+    down = q1 - 1.5*iqr
+    data =  data.loc[h[h<up][h>down].index]
+    return data
+
 def filter(data):
     # kmeans
     # for i in range(ITER):
@@ -65,14 +80,12 @@ def filter(data):
     # return data
 
     ## iqr
-    h = data['alt']
-    q1 = h.rolling(20, min_periods=1, center=True).quantile(0.25)
-    q3 = h.rolling(20, min_periods=1, center=True).quantile(0.75)
-    iqr = q3 - q1 
-    up = q3 + 1.5*iqr
-    down = q1 - 1.5*iqr
-    return data.loc[h[h<up][h>down].index]
-    
+    data = iqr(data)
+    data = iqr(data, 10)
+    data = iqr(data, 10, True)
+
+    return data
+
 
 #### 定义txt文件目录
 

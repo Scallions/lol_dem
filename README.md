@@ -52,6 +52,11 @@ region = 18,74,-89,-85
 ```
 根据需要在 `custom` 里面覆盖默认设置
 
+## outlier
+1. win_size 20, iqr
+2. win_size 10, iqr
+3. win_size 10, remove trend with moving mean + iqr
+
 ## 使用步骤 
 - read_data
 - remove outlier

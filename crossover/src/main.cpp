@@ -46,9 +46,10 @@ double mult(point a, point b, point c)      //??
 	return (a.lon - c.lon)*(b.lat - c.lat) - (b.lon - c.lon)*(a.lat - c.lat);
 }
 
-bool intersect(point aa, point bb, point cc, point dd)  //??????? 
+bool intersect(point aa, point bb, point cc, point dd)  
 {
     // find lien ab line cd intersect pint ??
+	// 排斥
 	if ((max(aa.lon, bb.lon)) < (min(cc.lon, dd.lon)))
 	{
         // ab upder cd
@@ -69,32 +70,45 @@ bool intersect(point aa, point bb, point cc, point dd)  //???????
         // cd left ab
 		return false;
 	}
+	// 结束排斥实验
+
+	// 判断是否在同一侧
 	if (mult(cc, bb, aa)*mult(bb, dd, aa) < 0)
 	{
+		// cd 在 ab同一侧
 		return false;
 	}
 	if (mult(aa, dd, cc)*mult(dd, bb, cc) < 0)
 	{
+		// ab 在 cd同一侧
 		return false;
 	}
 	return true;
 }
 
-inline bool in_rectangle(double lon, double lat, double lon_down, double lon_up, double lat_down, double lat_up)//???????????
+inline bool in_rectangle(double lon, double lat, double lon_down, double lon_up, double lat_down, double lat_up)//判断点是否在矩形里
 {
-    // in rectangle = = å
+    // in rectangle = =
 	if ((lon<lon_up) && (lon>lon_down) && (lat<lat_up) && (lat>lat_down))
 		return true;
 	else
 		return false;
 }
 
-crosspoint intersection(point u1, point u2, point v1, point v2)                 //?????????
+crosspoint intersection(point u1, point u2, point v1, point v2)                 //求交叉点坐标
 {
-    // find intersection point
+    // find intersection point lon lat pos
+	// ref https://www.cnblogs.com/ZQUACM-875180305/p/10149769.html
 	crosspoint ret;
 	ret.lon = -999;
 	ret.lat = -999;
+	// double d = (u2.lon-u1.lon)*(v2.lat-v1.lat) - (u1.lon-u2.lon)*(v1.lat-v2.lat);
+	// double b1 = (u2.lat-u1.lat)*u1.lon + (u1.lon-u2.lon)*u1.lat;
+	// double b2 = (v2.lat-v1.lat)*v1.lon + (v1.lon-v2.lon)*v1.lat;
+	// double d1 = b2*(u2.lon-u1.lon) - b1*(v2.lon-v1.lon);
+	// double d2 = b2*(u2.lat-u1.lat) - b1*(v2.lat-v1.lat);
+	// ret.lon = d1/d;
+	// ret.lat = d2/d;
 	double t = ((u1.lon - v1.lon)*(v1.lat - v2.lat) - (u1.lat - v1.lat)*(v1.lon - v2.lon))
 		/ ((u1.lon - u2.lon)*(v1.lat - v2.lat) - (u1.lat - u2.lat)*(v1.lon - v2.lon));
 	ret.lon = u1.lon + (u2.lon - u1.lon)*t;
@@ -103,6 +117,7 @@ crosspoint intersection(point u1, point u2, point v1, point v2)                 
 }
 
 double distan(point a, point b){
+	// 单位球面距离
 	double t = 3.1415926/180;
 	double d = acos(cos(a.lat*t) * cos(b.lat*t) * cos(a.lon*t - b.lon*t) + sin(a.lat*t) * sin(b.lat*t));
 	return d;
@@ -113,7 +128,7 @@ double insert_h(point r1, point r2, crosspoint& p_r){
 	point p_t = {p_r.lon, p_r.lat,0};
 	double d1 = distan(p_t, r1);
 	double d2 = distan(p_t, r2);
-	double h = d1*r1.alt / (d1 + d2) + d2*r2.alt / (d1 + d2);
+	double h = d2*r1.alt / (d1 + d2) + d1*r2.alt / (d1 + d2);
 	// set time
 	return h;
 }
@@ -130,6 +145,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 	while ((end1 - begin1) > 10 || (end2 - begin2) > 10){
 		num++;
 		
+		// 采样
 		if ((end1 - begin1) > 10){
 			gap1 = (end1 - begin1) / 10;
 			for (int i = 0; i <= 10; i++){
@@ -140,7 +156,6 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				line1[i] = l1[begin1 + i*gap1];
 			}
 		}
-
 		if ((end2 - begin2) > 10){
 			gap2 = (end2 - begin2) / 10;
 			for (int i = 0; i <= 10; i++){
@@ -151,6 +166,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				line2[i] = l2[begin2 + i*gap2];
 			}
 		}
+		// end 采样
 
         // update begine end to some range
 		if ((end1 - begin1) > 10){
@@ -219,7 +235,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				p_r.alt1 = insert_h(l1[i], l1[i + 1], p_r);
 				p_r.alt2 = insert_h(l2[j], l2[j + 1], p_r);
 				double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
-				double dtd = (p_r.alt1 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
+				double dtd = (p_r.alt2 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
 				p_r.ta = l1[i].t1 + l1[i].t2/28.0 + ta*dta;
 				p_r.td = l2[j].t1 + l2[j].t2/28.0 + td*dtd;
 				return p_r;
@@ -344,6 +360,8 @@ int main(int argc, char** argv)
 	}
 	cout << "\tTask size: " << result_fs.size() << endl;
 	int count_t = 0;
+	int count_all = result_fs.size();
+	int count_ct = 0;
 	ProgressBar bar{
 		option::BarWidth{100},
 		option::Start{"["},
@@ -355,25 +373,23 @@ int main(int argc, char** argv)
 		option::PostfixText{"Finding crossover..."},
 		option::ShowElapsedTime{true},
 		option::ShowRemainingTime{true},
-		option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+		// option::MaxProgress{count_all},
+		option::FontStyles{std::vector<FontStyle>{FontStyle::bold},
+		}
 	};
-	int count_all = result_fs.size();
-	int count_ct = 0;
 	for(auto && result_f: result_fs){
 		crossover = result_f.get();
-		// if( abs(crossover.alt1 - crossover.alt2) > 0.5) continue;
-		if (crossover.tag == true){
+		if (crossover.tag == true && abs(crossover.alt1 - crossover.alt2) < 0.5){
 			result<< fixed << setprecision(7) << crossover.f1 <<" "<< crossover.f2 <<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
 			++count_t;
 		}
 		++count_ct;
+		// bar.tick();
 		if(count_ct % (count_all / 100) == 0){
 			bar.set_progress(count_ct * 100 / count_all);
 		}
-		if(count_ct == count_all){
-			bar.mark_as_completed();
-		}
 	}
+	bar.mark_as_completed();
 	cout << "\tFind crosspoint: " << count_t << endl;
     result.close();
 	cout << endl;

@@ -1,6 +1,7 @@
 # top k orbits with worst quality
 
 import os
+from threading import Thread
 import pandas as pd 
 from constant import *
 import matplotlib.pyplot as plt
@@ -8,6 +9,8 @@ import os
 from tqdm import tqdm
 from loguru import logger
 import glob
+# import threadpool
+from multiprocessing import Pool
 
 
 def rename(file_):
@@ -18,17 +21,27 @@ def rename(file_):
 	except:
 		logger.warning(f"file not exist: {file_}")
 
-total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
-for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.*O")), total=total):
+
+def process_file(file_):
 	data = pd.read_csv(file_, header=None, sep=r"\s+", names=["lon","lat","alt","t1","t2"])
 	if len(data) < 50:
 		rename(file_)
-		continue
+		return
 	t_s = data["t1"].iloc[0] + data["t2"].iloc[0] / 28
 	t_e = data["t1"].iloc[-1] + data["t2"].iloc[-1] / 28
 	t_r = len(data)
 	t_c = (t_e - t_s) * 28
-	if t_r / t_c < 0.9:
+	if t_r / t_c < 0.90:
 		rename(file_)
 
+total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
+# pool = threadpool.ThreadPool(48)
+
+with Pool(48) as pool:
+	for i in tqdm(pool.imap(process_file, glob.iglob(os.path.join(DIR, r"LOLARDR_*.*O")), chunksize=48), total=total):
+		pass
+pool.close()
+pool.join()
+r_count = total - len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
+logger.info(f"remove track: {r_count}")
 

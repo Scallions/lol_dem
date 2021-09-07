@@ -87,4 +87,4 @@ fig.grdimage(
 )
 fig.colorbar(frame=["a1000", "x+lElevation", "y+lm"])
 fig.show()
-fig.savefig(f"figs/{NAME}_dem.png")  
+fig.savefig(f"figs/{NAME}/dem.png")  

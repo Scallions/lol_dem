@@ -53,9 +53,9 @@ n_s = lons_n * lats_n
 n_s = 10000
 logger.info(f"data count: {n}, lons_n: {lons_n}, lats_n: {lats_n}")
 # TODO: 采样调整
-sample_rate = 2
+sample_rate = 0.01
 if n > sample_rate * n_s:
-    idxs = random.sample(range(n), sample_rate*n_s)
+    idxs = random.sample(range(n), int(sample_rate*n_s))
     lons = data["lon"].values[idxs]
     lats = data["lat"].values[idxs]
     alts = data["alt"].values[idxs]
