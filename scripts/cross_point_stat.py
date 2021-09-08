@@ -119,7 +119,7 @@ print(dcps.head())
 
 plt.figure()
 min_ = df["dalt"].mean() - 2 * df["dalt"].std()
-max_ = df1["dalt"].mean() + 2* df1["dalt"].std()
+max_ = df["dalt"].mean() + 2* df["dalt"].std()
 bins = np.linspace(min_, max_, 200)
 plt.hist(df["dalt"], bins=bins, alpha=0.3, density=False, label=f"raw:{df['dalt'].std():.6f}")
 plt.hist(df1["dalt"], bins=bins, alpha=0.3, density=False, label=f"adj:{df1['dalt'].std():.6f}")

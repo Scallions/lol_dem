@@ -226,7 +226,7 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 		for (int j = begin2; j < end2; j++){
 			double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
 			double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
-			if(ta > 5.0 / 28 || td > 5.0 / 28) break;
+			// if(ta > 20.0 / 28 || td > 20.0 / 28) break;
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
 				crosspoint p_r = intersection(l1[i], l1[i + 1], l2[j], l2[j + 1]);
@@ -379,7 +379,7 @@ int main(int argc, char** argv)
 	};
 	for(auto && result_f: result_fs){
 		crossover = result_f.get();
-		if (crossover.tag == true && abs(crossover.alt1 - crossover.alt2) < 0.5){
+		if (crossover.tag == true && abs(crossover.alt1 - crossover.alt2) < 5){  // filter gate
 			result<< fixed << setprecision(7) << crossover.f1 <<" "<< crossover.f2 <<" " <<crossover.i<<" "<<crossover.j<<" "<<crossover.ta<<" "<<crossover.td<<" "<< crossover.lon << " " << crossover.lat << " " << crossover.alt1 - crossover.alt2 << endl;
 			++count_t;
 		}

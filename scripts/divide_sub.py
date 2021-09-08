@@ -13,8 +13,8 @@ import configparser
 
 lon1, lon2, lat1, lat2 = REGION
 
-lons = np.linspace(lon1, lon2, 10)
-lats = np.linspace(lat1, lat2, 20)
+lons = np.linspace(lon1, lon2, 5)
+lats = np.linspace(lat1, lat2, 5)
 
 # pool = Pool(48)
 
@@ -22,8 +22,19 @@ lats = np.linspace(lat1, lat2, 20)
 ## 读取所有轨道文件
 tracks = []
 logger.info("reading tracks")
-total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
-for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.*O")), total=total):
+a_gate = "LOLARDR_122600000.AR"
+d_gate = "LOLARDR_122600000.DR"
+total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.AR")))
+for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.AR")), total=total):
+	ff = file_.split("/")[-1]
+	if ff < a_gate:
+		continue
+	tracks.append((file_, tool.read_data(file_)))
+total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.DR")))
+for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.DR")), total=total):
+	ff = file_.split("/")[-1]
+	if ff < d_gate:
+		continue
 	tracks.append((file_, tool.read_data(file_)))
 logger.info(f"end read tracks. Nums: {total}")
 
@@ -31,6 +42,7 @@ logger.info(f"end read tracks. Nums: {total}")
 config_f = open("data/temp_config.ini", "w+")
 config = configparser.ConfigParser()
 config.read("data/config.ini")
+config.setdefault("config", NAME)
 
 def append_conf(lon1, lon2, lat1, lat2, i, j):
 	# config_f.write()

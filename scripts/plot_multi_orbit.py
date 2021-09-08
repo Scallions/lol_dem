@@ -22,10 +22,10 @@ dorbits = []
 #     data = tool.read_data(file_).to_numpy()[:,:3]
 #     dorbits.append(data)
 
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AR")):
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.AO")):
     data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
     aorbits.append(data)
-for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DR")):
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.DO")):
     data =  tool.read_data(file_)[['lon','lat','alt']].to_numpy()
     dorbits.append(data)
 

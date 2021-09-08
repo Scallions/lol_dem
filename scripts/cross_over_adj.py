@@ -105,7 +105,7 @@ if INIT:
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-ratio = 10
+ratio = 20
 if n > ratio * (la+ld):
     logger.info(f"sample cps")
     cross = cross.sample(int(ratio*(la+ld)))
@@ -158,9 +158,11 @@ if FUSE:
 else:
     logger.info(f"construct A, P, v")
     v = np.ones((lc,))
-    # A = np.zeros((lc, (la+ld)*2))
     # P = np.eye(lc)
-    A = sp.lil_matrix((lc, (la+ld)*2))
+    if NUMPY:
+        A = np.zeros((lc, (la+ld)*2))
+    else:
+        A = sp.lil_matrix((lc, (la+ld)*2))
     # P = sp.identity(lc)
     P = np.zeros((lc,))
     for i in range(lc):
@@ -199,12 +201,10 @@ logger.info(f"Before: {cross['alt'].mean()} {cross['alt'].std()}")
 # init x
 # TODO: 分别计算初始值
 start = time.time()
-rhi = 0.001
+rhi = 0.1
 rhi1 = 0.1
 # use scipy ?
 logger.info(f"A's shape: {A.shape}")
-if NUMPY:
-    A = A.toarray()
 Atp = A.T.dot(P)
 Att = Atp.dot(A)
 # Atp = A.T 
@@ -248,7 +248,7 @@ logger.info(f"Init: {np.mean(res)} {np.std(res)}")
 # Add = A.T.dot(P).dot(A) + rhi1*PX
 # Apd = Att + rhi1 * np.eye((la+ld)*2)
 # Apd = np.linalg.inv(Apd)
-for i in range(5):
+for i in range(6):
     logger.info(f"adj with NUMPY: {NUMPY} REG: {REG}")
     # L = v - np.dot(A, X)
     L = v - A.dot(X)
@@ -284,7 +284,8 @@ for i in range(5):
     X = X + x 
     # t = v - np.dot(A, X)
     t = v - A.dot(X)
-    tb = np.abs(t) 
+    tb = np.abs(t)
+    tb = tb - np.min(tb) + (tb.max() -tb.min()) * 0.0001
     ts = np.sum(tb)
     if NUMPY:
         P = np.diag(tb) / ts
@@ -294,10 +295,10 @@ for i in range(5):
     Att = Atp.dot(A)
     # Atp = A.T 
     # Att = A.T.dot(A)
-    rhi *= 0.1
+    rhi1 *= 0.1
     if NUMPY:
         if REG:
-            Attf = np.linalg.pinv(Att+rhi*np.eye((la+ld)*2), hermitian=True)
+            Attf = np.linalg.pinv(Att+rhi1*np.eye((la+ld)*2), hermitian=True)
     logger.info(f"After adj({i}): {np.mean(t)} , {np.std(t)}")
 
 end = time.time()
@@ -312,9 +313,14 @@ x = X
 # print("Before adj: ", np.abs(dhs[:,0] - dhs[:,1]).mean())
 
 # print("After adj: ", np.abs(v[0::2] - v[1::2]).mean(), np.std(v[0::2] - v[1::2]))
-plt.hist(v, bins=100)
-plt.hist(res, bins=100)
-plt.savefig(f"figs/{NAME}/in_adj_hist.png")
+# plt.figure()
+# min_ = v.mean() - 2 * v.std()
+# max_ = v.mean() + 2* v.std()
+# bins = np.linspace(min_, max_, 200)
+# plt.hist(v, bins=bins, alpha=0.3, density=False, label=f"raw:{v.std():.6f}")
+# plt.hist(res, bins=bins, alpha=0.3, density=False, label=f"raw:{res.std():.6f}")
+# plt.legend()
+# plt.savefig(f"figs/{NAME}/in_adj_hist.png")
 
 
 

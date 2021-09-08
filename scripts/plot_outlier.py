@@ -19,9 +19,9 @@ for ofile in tqdm(glob.iglob(os.path.join(DIR,r"LOLARDR_*.*O")), total=len(glob.
 		raise ValueError("File not exist.")
 	rdf = pd.read_csv(rfile, header=None, sep=r"\s+", names=["lon","lat","alt","t1","t2"])
 	odf = pd.read_csv(ofile, header=None, sep=r"\s+", names=["lon","lat","alt","t1","t2"])
-	if dmax > len(rdf) - len(odf):
+	if dmax > (len(rdf) - len(odf))/len(rdf):
 		continue 
-	dmax = max(dmax, len(rdf) - len(odf))
+	dmax = max(dmax, (len(rdf) - len(odf))/len(rdf))
 	r_idx = rdf["t1"] + rdf["t2"]/28
 	o_idx = odf["t1"] + odf["t2"]/28
 	maxfile = rfile
