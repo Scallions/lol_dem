@@ -25,6 +25,10 @@ NUMPY = True
 INIT = False
 REG = True
 
+## 删除上次结果
+for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.*C")):
+    os.remove(file_)
+
 ## load orbit
 
 if FUSE:
@@ -180,8 +184,8 @@ else:
         dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
         v[i] = d 
         # P[i,i] = 1/(abs(d)+1e-6)
-        # P[i] = 1/(abs(d)+1e-6)
-        P[i] = abs(d)
+        P[i] = 1/(abs(d)+1e-6)
+        # P[i] = abs(d)
         A[i,2*ai] = 1
         A[i,2*ai+1] = at 
         A[i,2*di] = -1
@@ -201,8 +205,8 @@ logger.info(f"Before: {cross['alt'].mean()} {cross['alt'].std()}")
 # init x
 # TODO: 分别计算初始值
 start = time.time()
-rhi = 0.1
-rhi1 = 0.1
+rhi = 0.001
+rhi1 = 0.001
 # use scipy ?
 logger.info(f"A's shape: {A.shape}")
 Atp = A.T.dot(P)
@@ -232,8 +236,8 @@ if not INIT:
             
     else:
         if NUMPY:
-            X = np.linalg.lstsq(Att,Atp.dot(v))[0]
-            # X = Attf.dot(Atp.dot(v))
+            # X = np.linalg.lstsq(Att,Atp.dot(v))[0]
+            X = Attf.dot(Atp.dot(v))
         else:
             # X = lsq_linear(A, v)
             # X = sp.linalg.lsqr(A, v, show=True) 
@@ -266,8 +270,8 @@ for i in range(6):
         if NUMPY:
             # x = np.linalg.lstsq(Apd, Atp.dot(L))[0]
             # x = np.linalg.lstsq(A, L)[0]
-            x = np.linalg.lstsq(Att, Atp.dot(L))[0]
-            # x = Attf.dot(Atp.dot(L))
+            # x = np.linalg.lstsq(Att, Atp.dot(L))[0]
+            x = Attf.dot(Atp.dot(L))
         else:
             # x = sp.linalg.spsolve(Att, Atp.dot(L))
             x = sp.linalg.inv(Att).dot(Atp.dot(L))
@@ -286,6 +290,7 @@ for i in range(6):
     t = v - A.dot(X)
     tb = np.abs(t)
     tb = tb - np.min(tb) + (tb.max() -tb.min()) * 0.0001
+    tb = 1 / tb
     ts = np.sum(tb)
     if NUMPY:
         P = np.diag(tb) / ts
@@ -295,7 +300,7 @@ for i in range(6):
     Att = Atp.dot(A)
     # Atp = A.T 
     # Att = A.T.dot(A)
-    rhi1 *= 0.1
+    rhi1 *= 0.01
     if NUMPY:
         if REG:
             Attf = np.linalg.pinv(Att+rhi1*np.eye((la+ld)*2), hermitian=True)
