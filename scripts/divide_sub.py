@@ -29,20 +29,27 @@ for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.AR")), total=total):
 	ff = file_.split("/")[-1]
 	if ff < a_gate:
 		continue
-	tracks.append((file_, tool.read_data(file_)))
+	try:
+		tracks.append((file_, tool.read_data(file_)))
+	except:
+		pass
 total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.DR")))
 for file_ in tqdm(glob.iglob(os.path.join(DIR, r"LOLARDR_*.DR")), total=total):
 	ff = file_.split("/")[-1]
 	if ff < d_gate:
 		continue
-	tracks.append((file_, tool.read_data(file_)))
+	try:
+		tracks.append((file_, tool.read_data(file_)))
+	except:
+		pass
 logger.info(f"end read tracks. Nums: {total}")
 
 ## 打开配置文件
 config_f = open("data/temp_config.ini", "w+")
 config = configparser.ConfigParser()
 config.read("data/config.ini")
-config.setdefault("config", NAME)
+# config.setdefault("config", NAME)
+config["DEFAULT"]["config"] = NAME
 
 def append_conf(lon1, lon2, lat1, lat2, i, j):
 	# config_f.write()

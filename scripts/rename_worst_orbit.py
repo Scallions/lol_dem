@@ -9,7 +9,7 @@ from tqdm import tqdm
 from loguru import logger
 
 
-cp_fp = "crossoverC.txt" # 交叉点文件信息
+cp_fp = "crossoverO.txt" # 交叉点文件信息
 
 
 # 读取到pandas中

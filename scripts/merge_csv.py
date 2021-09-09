@@ -2,8 +2,8 @@ import pandas as pd
 import glob
 
 datas = None
-name = "shoemaker"
-for file_ in glob.iglob(f"data/{name}*.csv"):
+name = "cabeus2"
+for file_ in glob.iglob(f"data/{name}_*.csv"):
     data =  pd.read_csv(file_)
     if datas is None:
         datas = data

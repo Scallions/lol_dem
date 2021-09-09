@@ -120,6 +120,7 @@ double distan(point a, point b){
 	// 单位球面距离
 	double t = 3.1415926/180;
 	double d = acos(cos(a.lat*t) * cos(b.lat*t) * cos(a.lon*t - b.lon*t) + sin(a.lat*t) * sin(b.lat*t));
+	// double d = sqrt((a.lat - b.lat)*(a.lat - b.lat) + (a.lon - b.lon)*(a.lon - b.lon));
 	return d;
 }
 
@@ -224,8 +225,12 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 
 	for (int i = begin1; i < end1; i++){
 		for (int j = begin2; j < end2; j++){
-			double ta = (l1[i+1].t1+l1[i+1].t2/28.0 - l1[i].t1 - l1[i].t2/28.0);
-			double td = (l2[j+1].t1+l2[j+1].t2/28.0 - l2[j].t1 - l2[j].t2/28.0);
+			double tae = l1[i+1].t1+l1[i+1].t2/28.0;
+			double tas = l1[i].t1 + l1[i].t2/28.0;
+			double tde = l2[j+1].t1+l2[j+1].t2/28.0;
+			double tds = l2[j].t1 + l2[j].t2/28.0;
+			double ta = tae - tas;
+			double td = tde - tds;
 			// if(ta > 20.0 / 28 || td > 20.0 / 28) break;
 			if (intersect(l1[i], l1[i + 1], l2[j], l2[j + 1])){
 				tag = true;
@@ -234,10 +239,18 @@ crosspoint calc_crossover(const vector<point> &l1, const vector<point> &l2, int 
 				// point p_t = {p_r.lon, p_r.lat,0};
 				p_r.alt1 = insert_h(l1[i], l1[i + 1], p_r);
 				p_r.alt2 = insert_h(l2[j], l2[j + 1], p_r);
-				double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
-				double dtd = (p_r.alt2 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
+				point cp{p_r.lon, p_r.lat, 0, 0, 0};
+				double da = distan(l1[i], l1[i+1]);
+				double dda = distan(l1[i], cp);
+				double dd = distan(l2[j], l2[j+1]);
+				double ddd = distan(l2[j], cp);
+				double dta = dda / da;
+				double dtd = ddd / dd;
+				// double dta = (p_r.alt1 - l1[i].alt) / (l1[i+1].alt - l1[i].alt);
+				// double dtd = (p_r.alt2 - l2[j].alt) / (l2[j+1].alt - l2[j].alt);
 				p_r.ta = l1[i].t1 + l1[i].t2/28.0 + ta*dta;
 				p_r.td = l2[j].t1 + l2[j].t2/28.0 + td*dtd;
+				// if(p_r.ta > tae || p_r.ta < tas || p_r.td > tde || p_r.td < tds) break; // 剔除异常时间
 				return p_r;
 			}			
 		}
