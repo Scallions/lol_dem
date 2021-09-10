@@ -13,7 +13,7 @@ import subprocess
 
 def do_one(args):
 	i, j = args
-	subprocess.run(["bash", "test.sh", f"{NAME}_{i}_{j}", ">", "/dev/null"])
+	subprocess.run(["bash", "test.sh", f"{NAME}_{i}_{j}", ">>", "/dev/null"])
 	
 
 

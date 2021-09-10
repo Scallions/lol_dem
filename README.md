@@ -57,6 +57,10 @@ region = 18,74,-89,-85
 2. win_size 10, iqr
 3. win_size 10, remove trend with moving mean + iqr
 
+## 轨道剔除
+- 离散程度
+- 稀疏程度
+- 交叉点数量
 ## 使用步骤 
 - read_data
 - remove outlier

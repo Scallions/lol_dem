@@ -22,7 +22,13 @@ cps_adj = None
 for i in range(len(lons)-1):
 	for j in range(len(lats)-1):
 		lon1, lon2 = lons[i:i+2]
+		dlon = lon2 - lon1
 		lat1, lat2 = lats[j:j+2]
+		dlat = lat2 - lat2
+		lon1 = lon1-dlon*0.1
+		lon2 = lon2+dlon*0.1
+		lat1 = lat1-dlat*0.1
+		lat2 = lat2+dlat*0.1
 		data = pd.read_csv(f"data/{lon1},{lon2},{lat1},{lat2}/crossoverO.txt", names=["aorbit", "dorbit", "aidx", "didx", "atime", "dtime", "lon", "lat", "dalt"], sep=" ")
 		if cps is None:
 			cps = data

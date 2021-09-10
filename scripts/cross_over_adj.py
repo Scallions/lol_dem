@@ -104,36 +104,21 @@ if INIT:
         else:
             X[2*v] = x[1]
             X[2*v+1] = x[0]
-    # X = sp.dok_matrix(X)
 
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-ratio = 20
+ratio = 4
 if n > ratio * (la+ld):
     logger.info(f"sample cps")
     cross = cross.sample(int(ratio*(la+ld)))
 lc = len(cross)
 
-# stda = cross.groupby(["f1"])["alt"].agg("std")
-# stdd = cross.groupby(["f2"])["alt"].agg("std")
-
-# s = sum(stda) + sum(stdd)
 
 if FUSE:
     v = np.ones((lc*2))
     A = np.zeros((lc*2, (la+ld)*2))
     P = np.eye(lc*2)
-
-    # for i in stda.index:
-    #     ai = fmap[i]
-    #     P[2*ai,2*ai] = stda[i] / s
-    #     P[2*ai+1,2*ai+1] = stda[i] / s
-    
-    # for i in stdd.index:
-    #     di = fmap[i]
-    #     P[2*di,2*di] = stdd[i] / s
-    #     P[2*di+1,2*di+1] = stdd[i] / s
 
     for i in range(lc):
         # split
@@ -144,8 +129,6 @@ if FUSE:
         d = cross.iloc[i,-1]
         ai = fmap[afile]
         di = fmap[dfile]
-        # at = aorbits[ai][0][ar][-2] - aorbits[ai][0][0][-2]
-        # dt = dorbits[di-la][0][dr][-2] - dorbits[di-la][0][0][-2]
         at = cross.iloc[i,4] - aorbits[ai][0][0][-2]
         dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
         v[2*i] = d / 2 
@@ -161,14 +144,13 @@ if FUSE:
     P = P / np.sum(P)
 else:
     logger.info(f"construct A, P, v")
-    v = np.ones((lc,))
+    v = np.zeros((lc,))
     # P = np.eye(lc)
     if NUMPY:
         A = np.zeros((lc, (la+ld)*2))
     else:
         A = sp.lil_matrix((lc, (la+ld)*2))
-    # P = sp.identity(lc)
-    P = np.zeros((lc,))
+    P = np.ones((lc,))
     for i in range(lc):
         # one
         afile = cross.iloc[i,0]
@@ -178,8 +160,6 @@ else:
         d = cross.iloc[i,-1]
         ai = fmap[afile]
         di = fmap[dfile]
-        # at = aorbits[ai][0][ar][-2] - aorbits[ai][0][0][-2]
-        # dt = dorbits[di-la][0][dr][-2] - dorbits[di-la][0][0][-2]
         at = cross.iloc[i,4] - aorbits[ai][0][0][-2]
         dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
         v[i] = d 
@@ -197,30 +177,26 @@ else:
         P = sp.diags(P)
 
 
-# x = (A^TPA)^{-1} A^T P l
-# x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + np.eye((la+ld)*2)), np.transpose(A)), v)
-# x = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A), A) + P), np.transpose(A)), v)
+## 增加约束
+# A[-2,:] = np.arange((la+ld)*2) % 2
+# A[-1,:] = np.arange(1, (la+ld)*2+1) % 2
+
 
 logger.info(f"Before: {cross['alt'].mean()} {cross['alt'].std()}")
 # init x
 # TODO: 分别计算初始值
 start = time.time()
-rhi = 0.001
-rhi1 = 0.001
+rhi = 0.1
+rhi1 = 0.1
 # use scipy ?
 logger.info(f"A's shape: {A.shape}")
 Atp = A.T.dot(P)
 Att = Atp.dot(A)
-# Atp = A.T 
-# Att = A.T.dot(A)
 if NUMPY:
     if REG:
         Attf = np.linalg.pinv(Att+rhi*np.eye((la+ld)*2), hermitian=True)
     else:
         Attf = np.linalg.pinv(Att, hermitian=True)
-# Att = A.T.dot(A)
-# Adt = Att + rhi*I
-# Adt = np.linalg.inv(Adt)
 if not INIT:
     logger.info(f"init X with NUMPY: {NUMPY} REG: {REG}")
     if REG:
@@ -228,7 +204,7 @@ if not INIT:
             I = np.eye((la+ld)*2)
             # X = np.dot(np.dot(np.linalg.pinv(np.dot(np.transpose(A), A) + rhi * I), np.transpose(A)), v)
             X = Attf.dot(Atp.dot(v))
-            # X = np.linalg.lstsq(Att, Atp.dot(v))[0]
+            # X = np.linalg.lstsq(Att+rhi*np.eye((la+ld)*2), Atp.dot(v))[0]
         else:
             I = sp.identity((la+ld)*2)
             # X = sp.linalg.inv(sp.csc_matrix(A.T * A + rhi*I)) * A.T * v
@@ -236,8 +212,8 @@ if not INIT:
             
     else:
         if NUMPY:
-            # X = np.linalg.lstsq(Att,Atp.dot(v))[0]
-            X = Attf.dot(Atp.dot(v))
+            X = np.linalg.lstsq(Att,Atp.dot(v), rcond=None)[0]
+            # X = Attf.dot(Atp.dot(v))
         else:
             # X = lsq_linear(A, v)
             # X = sp.linalg.lsqr(A, v, show=True) 
@@ -248,11 +224,7 @@ res = v - A.dot(X)
 logger.info(f"Init: {np.mean(res)} {np.std(res)}")
 
 # 间接平差
-# PX = sp.identity((la+ld)*2)
-# Add = A.T.dot(P).dot(A) + rhi1*PX
-# Apd = Att + rhi1 * np.eye((la+ld)*2)
-# Apd = np.linalg.inv(Apd)
-for i in range(6):
+for i in range(4):
     logger.info(f"adj with NUMPY: {NUMPY} REG: {REG}")
     # L = v - np.dot(A, X)
     L = v - A.dot(X)
@@ -270,21 +242,14 @@ for i in range(6):
         if NUMPY:
             # x = np.linalg.lstsq(Apd, Atp.dot(L))[0]
             # x = np.linalg.lstsq(A, L)[0]
-            # x = np.linalg.lstsq(Att, Atp.dot(L))[0]
-            x = Attf.dot(Atp.dot(L))
+            x = np.linalg.lstsq(Att, Atp.dot(L), rcond=None)[0]
+            # x = Attf.dot(Atp.dot(L))
         else:
             # x = sp.linalg.spsolve(Att, Atp.dot(L))
             x = sp.linalg.inv(Att).dot(Atp.dot(L))
             # x = sp.linalg.lsmr(A, L)[0]
             # x = sp.linalg.lsmr(Att, A.T.dot(L))[0]
             # x = sp.linalg.spsolve(Att, A.T.dot(L))
-    # x = Apd.dot(Atp.dot(L))
-    # x = sp.linalg.lsmr(A, L, show=True, maxiter=10)[0]
-    # x = np.linalg.lstsq(A.T.dot(A), A.T.dot(L))[0]
-    # x = sp.linalg.spsolve(Add, A.T.dot(L))
-    # x = sp.linalg.lsqr(Att, A.T.dot(L))
-    # x = sp.linalg.spsolve(A.T*P*A+rhi1*PX, A.T*L)
-    # x = sp.linalg.spsolve(A.T*P*A+rhi1*PX, A.T*P*L)
     X = X + x 
     # t = v - np.dot(A, X)
     t = v - A.dot(X)
@@ -300,7 +265,7 @@ for i in range(6):
     Att = Atp.dot(A)
     # Atp = A.T 
     # Att = A.T.dot(A)
-    rhi1 *= 0.01
+    rhi1 *= 0.1
     if NUMPY:
         if REG:
             Attf = np.linalg.pinv(Att+rhi1*np.eye((la+ld)*2), hermitian=True)

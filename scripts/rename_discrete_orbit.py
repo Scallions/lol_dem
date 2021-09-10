@@ -29,7 +29,9 @@ def process_file(file_):
 	if len(data) < 50:
 		rename(file_)
 		return
-	mv_stds = data["alt"].rolling(20, min_periods=1, center=True).std() 
+	trend = data["alt"].rolling(6, min_periods=1, center=True).mean()
+	delta = data["alt"] - trend
+	mv_stds = delta.rolling(10, min_periods=1, center=True).std() 
 	mv_std = mv_stds.mean().item()
 	if mv_std > 0.1:
 		rename(file_)

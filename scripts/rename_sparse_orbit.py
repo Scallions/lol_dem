@@ -31,7 +31,7 @@ def process_file(file_):
 	t_e = data["t1"].iloc[-1] + data["t2"].iloc[-1] / 28
 	t_r = len(data)
 	t_c = (t_e - t_s) * 28
-	if t_r / t_c < 0.7:
+	if t_r / t_c < 0.9:
 		rename(file_)
 
 total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
