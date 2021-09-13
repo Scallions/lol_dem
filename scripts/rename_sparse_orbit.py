@@ -14,8 +14,8 @@ from multiprocessing import Pool
 
 
 def rename(file_):
-	out = file_[:-1] + "D"
-	logger.info(f"rename file: {file_}")
+	out = file_ + "D"
+	# logger.info(f"rename file: {file_}")
 	try:
 		os.rename(file_, out)
 	except:
@@ -31,17 +31,17 @@ def process_file(file_):
 	t_e = data["t1"].iloc[-1] + data["t2"].iloc[-1] / 28
 	t_r = len(data)
 	t_c = (t_e - t_s) * 28
-	if t_r / t_c < 0.9:
+	if t_r / t_c < 0.8: # 越大移除的越多
 		rename(file_)
 
-total = len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
+total = len(glob.glob(os.path.join(DIR, f"LOLARDR_*.*{TYPE}")))
 # pool = threadpool.ThreadPool(48)
 
 with Pool(48) as pool:
-	for i in tqdm(pool.imap(process_file, glob.iglob(os.path.join(DIR, r"LOLARDR_*.*O")), chunksize=48), total=total):
+	for i in tqdm(pool.imap(process_file, glob.iglob(os.path.join(DIR, f"LOLARDR_*.*{TYPE}")), chunksize=48), total=total):
 		pass
 pool.close()
 pool.join()
-r_count = total - len(glob.glob(os.path.join(DIR, r"LOLARDR_*.*O")))
+r_count = total - len(glob.glob(os.path.join(DIR, f"LOLARDR_*.*{TYPE}")))
 logger.info(f"remove track: {r_count}")
 

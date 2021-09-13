@@ -40,8 +40,8 @@ n = len(data)
 # TODO: 0.25°一格
 lons_n = REGION[1] - REGION[0]
 lats_n = REGION[3] - REGION[2]
-lons_n = int(lons_n // 0.008)
-lats_n = int(lats_n // 0.008)
+lons_n = int(lons_n // 0.08)
+lats_n = int(lats_n // 0.08)
 nn = lons_n * lats_n
 # TODO: 采样调整
 ratio = 0.1

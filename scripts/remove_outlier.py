@@ -14,6 +14,18 @@ from tqdm import tqdm
 
 from constant import *
 
+def step(data):
+    gate = 0.025
+    h = data['alt']
+    kernel = np.array([1/4,1/4,0,1/4,1/4])
+    h_hat = h - np.convolve(kernel, h, mode="same")
+    h_t = h_hat[2:-2]
+    idxs = h_t[h_t<gate][h_t>-gate].index
+    # idxs = idxs.append(h_hat[:2].index)
+    # idxs = idxs.append(h_hat[-2:].index)
+    data = data.loc[idxs.sort_values()]
+    return data
+
 def proc_df(df):
     df = df[["lon","lat","alt","t1","t2"]].copy()
     a_len = 3
@@ -47,11 +59,11 @@ def iqr(data, win=20, mean=False):
     h = data['alt']
     if mean:
         h = h - h.rolling(win, min_periods=1, center=True).mean() 
-        q1 = h.quantile(0.25)
-        q3 = h.quantile(0.75)
-    else:
-        q1 = h.rolling(win, min_periods=1, center=True).quantile(0.25)
-        q3 = h.rolling(win, min_periods=1, center=True).quantile(0.75)
+    #     q1 = h.quantile(0.25)
+    #     q3 = h.quantile(0.75)
+    # else:
+    q1 = h.rolling(4*win, min_periods=1, center=True).quantile(0.25)
+    q3 = h.rolling(4*win, min_periods=1, center=True).quantile(0.75)
     iqr = q3 - q1 
     up = q3 + 1.5*iqr
     down = q1 - 1.5*iqr
@@ -79,10 +91,16 @@ def filter(data):
     #     data = proc_df(data)
     # return data
 
+
+    ## 数值过滤
+    data = step(data)
+
     ## iqr
-    data = iqr(data)
-    data = iqr(data, 10)
-    data = iqr(data, 10, True)
+    data = iqr(data, 5, True)
+    # data = iqr(data, 5, True)
+    # data = iqr(data, 10)
+    # data = iqr(data, 10, True)
+
 
     return data
 

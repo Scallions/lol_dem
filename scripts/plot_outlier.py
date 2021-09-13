@@ -28,8 +28,8 @@ for ofile in tqdm(glob.iglob(os.path.join(DIR,r"LOLARDR_*.*O")), total=len(glob.
 	
 	plt.figure()
 	plt.title(rfile.split("/")[-1])
-	plt.scatter(r_idx, rdf['alt'])
-	plt.scatter(o_idx, odf['alt'])
+	plt.scatter(r_idx, rdf['alt'], s=0.5)
+	plt.scatter(o_idx, odf['alt'], s=0.5)
 	plt.savefig(f"figs/{NAME}/outlier.png")
 
 print(maxfile)

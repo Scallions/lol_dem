@@ -30,4 +30,4 @@ for file_ in glob.iglob(os.path.join(DIR, reg)):
 data = datas
 logger.info(f"data size: {len(data)}")
 
-data.to_csv(f"data/{NAME}.csv", index=None)
+data.to_csv(f"data/{NAME}_{TYPE}.csv", index=None)
