@@ -24,6 +24,7 @@ i = 0
 NUMPY = True
 INIT = False
 REG = True
+# REG = False
 
 ## 删除上次结果
 for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.*C")):
@@ -108,10 +109,12 @@ if INIT:
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-ratio = 4
-if n > ratio * (la+ld):
-    logger.info(f"sample cps")
-    cross = cross.sample(int(ratio*(la+ld)))
+SAMPLE = False
+if SAMPLE:
+    ratio = 10
+    if n > ratio * (la+ld):
+        logger.info(f"sample cps")
+        cross = cross.sample(int(ratio*(la+ld)))
 lc = len(cross)
 
 
@@ -160,7 +163,13 @@ else:
         d = cross.iloc[i,-1]
         ai = fmap[afile]
         di = fmap[dfile]
-        at = cross.iloc[i,4] - aorbits[ai][0][0][-2]
+        ## 起始点时间
+        # at = cross.iloc[i,4] - aorbits[ai][0][0][-2]
+        # dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
+        ## 中点时间
+        mat = (aorbits[ai][0][0][-2]+aorbits[ai][0][0][-1]/28+aorbits[ai][0][-1][-2]+aorbits[ai][0][-1][-1]/28)/2
+        mdt = (dorbits[di-la][0][0][-2]+dorbits[di-la][0][0][-1]/28+dorbits[di-la][0][-1][-2]+dorbits[di-la][0][-1][-1]/28)/2
+        at = cross.iloc[i,4] - mat
         dt = cross.iloc[i,5] - dorbits[di-la][0][0][-2]
         v[i] = d 
         # P[i,i] = 1/(abs(d)+1e-6)
@@ -186,7 +195,7 @@ logger.info(f"Before: {cross['alt'].mean()} {cross['alt'].std()}")
 # init x
 # TODO: 分别计算初始值
 start = time.time()
-rhi = 0.1
+rhi = 0.01
 rhi1 = 0.1
 # use scipy ?
 logger.info(f"A's shape: {A.shape}")
@@ -325,7 +334,7 @@ else:
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
-        t0 = orbit["t1"][0]
+        t0 = (orbit["t1"][0]+orbit["t2"][0]/28+orbit.iloc[-1,-2]+orbit.iloc[-1,-1]/28)/2
         t = orbit["t1"] + orbit["t2"] / 28 - t0
         orbit["alt"] = orbit["alt"] - x0 - t * x1
         orbit.to_csv(f"{file_[:-3]}.AC", sep=" ", header = 0, index=0, float_format="%.7f")
@@ -337,7 +346,7 @@ else:
         orbit = pd.DataFrame(orbit, columns=["lon","lat","alt","t1","t2"])
         orbit["t1"] = orbit["t1"].astype("int")
         orbit["t2"] = orbit["t2"].astype("int")
-        t0 = orbit["t1"][0]
+        t0 = (orbit["t1"][0]+orbit["t2"][0]/28+orbit.iloc[-1,-2]+orbit.iloc[-1,-1]/28)/2
         t = orbit["t1"] + orbit["t2"] / 28 - t0
         orbit["alt"] = orbit["alt"] - x0 - t * x1
         orbit.to_csv(f"{file_[:-3]}.DC", sep=" ", header = 0, index=0, float_format="%.7f")

@@ -91,7 +91,7 @@ def filter(data):
     #     data = proc_df(data)
     # return data
 
-
+    raw = data.copy()
     ## 数值过滤
     data = step(data)
 
@@ -100,6 +100,9 @@ def filter(data):
     # data = iqr(data, 5, True)
     # data = iqr(data, 10)
     # data = iqr(data, 10, True)
+
+    ## 如果缺失率小于90% 插值
+    
 
 
     return data

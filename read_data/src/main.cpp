@@ -99,7 +99,8 @@ void swap(real &e, all  d)      //将读取结果转换为BLH
 		}
 
 		e.poin[i].lat = (double)d.b[i].latitude / (double)1E7;
-		e.alt[i] = d.b[i].radius / (double)1E6 - d.a.selenoid_radius / (double)1E6; //double(1737.4);
+		// e.alt[i] = d.b[i].radius / (double)1E6 - d.a.selenoid_radius / (double)1E6; //double(1737.4);
+		e.alt[i] = d.b[i].radius / (double)1E6 - double(1737.4);
 		// if(e.alt[i] < -1000 && d.b[i].range != UINT32_MAX){
 		// 	// cout<<d.b[i].radius<< " " << d.a.selenoid_radius << " " << d.b[i].range << " " << d.a.sc_radius<<endl;
 		// 	// cout<<e.alt[i]<< " ";
