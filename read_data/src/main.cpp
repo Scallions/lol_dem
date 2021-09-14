@@ -11,8 +11,12 @@
 
 #include "Logger.hpp"
 #include "threadpool.h"
+#include "progressbar.hpp"
+
 
 using namespace std;
+using namespace indicators;
+
 
 // 定义数据结构
 struct first
@@ -184,6 +188,7 @@ int main(int argc, char** argv)
 
 	long long fileCount = 0;
 	atomic_llong count(0);
+	vector<future<void>> result_fs;
 
 
     for(boost::filesystem::recursive_directory_iterator itor( dir_path ); itor != itEnd ;++itor)
@@ -195,7 +200,7 @@ int main(int argc, char** argv)
         {
 			++fileCount;
 			boost::filesystem::path data_path = itor->path();
-			pool.enqueue([&, data_path](){
+			result_fs.emplace_back(pool.enqueue([&, data_path](){
 				// LOG << "Reading: " << itor->path().string() << "\n";
 				// cout << "Reading: " << itor->path().string() << endl;
 
@@ -282,21 +287,46 @@ int main(int argc, char** argv)
 				dat_stream.close();
 				++count;
 				// cout << endl;
-        	});
+        	}));
 		}
     }
+
+	ProgressBar bar{
+		option::BarWidth{100},
+		option::Start{"["},
+		option::Fill{"■"},
+		option::Lead{"■"},
+		option::Remainder{"-"},
+		option::End{" ]"},
+		option::ForegroundColor{Color::cyan},
+		option::PostfixText{"Finding crossover..."},
+		option::ShowElapsedTime{true},
+		option::ShowRemainingTime{true},
+		// option::MaxProgress{count_all},
+		option::FontStyles{std::vector<FontStyle>{FontStyle::bold},
+		}
+	};
     
 	// 启动输出显示
-	long long last = 0;
-	thread t([&](){
-		while(true){
-			if(count == fileCount) return;
-			if(count==last) continue;
-			cout << "Read: " << count << "/" << fileCount << endl;
-			last = count;
-			this_thread::sleep_for(chrono::milliseconds(500));
+	// long long last = 0;
+	// thread t([&](){
+	// 	while(true){
+	// 		if(count == fileCount) return;
+	// 		if(count==last) continue;
+	// 		cout << "Read: " << count << "/" << fileCount << endl;
+	// 		last = count;
+	// 		this_thread::sleep_for(chrono::milliseconds(500));
+	// 	}
+	// });
+	int count_ct = 0;
+	for(auto && result_f: result_fs){
+		result_f.get();
+		++count_ct;
+		if(count_ct % (fileCount / 100) == 0){
+			bar.set_progress(count_ct * 100 / fileCount);
 		}
-	});
-	
+	}
+	bar.mark_as_completed();
+
 	return 0;
 }
