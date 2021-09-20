@@ -109,7 +109,7 @@ if INIT:
 # simpling
 # TODO: 根据数量调整，而不是直接确定倍数,采样
 n = len(cross)
-SAMPLE = False
+SAMPLE = True
 if SAMPLE:
     ratio = 10
     if n > ratio * (la+ld):

@@ -28,12 +28,14 @@ q3 = acps.quantile(0.75).item()
 iqr = q3 - q1
 up = q3 + 1.5*iqr 
 down = q1 - 1.5*iqr
+count = 0
 for i in tqdm(acps.index):
 	if acps['dalt'].at[i] < up and acps['dalt'].at[i] > down:
 		continue
-	out = i[:-1] + "D"
+	out = i + "D"
 	logger.info(f"rename file: {i}")
 	try:
+		count = count + 1
 		os.rename(i, out)
 	except:
 		logger.warning(f"file not exist: {i}")
@@ -51,10 +53,12 @@ for i in tqdm(dcps.index):
 	out = i[:-1] + "D"
 	logger.info(f"rename file: {i}")
 	try:
+		count = count + 1
 		os.rename(i, out)
 	except:
 		logger.warning(f"file not exist: {i}")
 
+logger.info(f"remove track: {count}")
 
 ## 交叉点数量
 # acps = df[["aorbit", "dalt"]].groupby("aorbit").count().sort_values(by="dalt", ascending=True)

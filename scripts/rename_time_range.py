@@ -22,10 +22,10 @@ missions_date = {
 }
 
 
-start_gate = "LOLARDR_092580000"
-end_gate = "LOLARDR_113450000"
-# start_gate = "LOLARDR_113550000"
-# end_gate = "LOLARDR_233450000"
+# start_gate = "LOLARDR_092580000"
+# end_gate = "LOLARDR_113450000"
+start_gate = "LOLARDR_113550000"
+end_gate = "LOLARDR_233450000"
 tracks = []
 for file_ in glob.iglob(os.path.join(DIR, r"LOLARDR_*.*R")):
 	ff = file_.split("/")[-1]

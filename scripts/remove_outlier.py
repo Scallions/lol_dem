@@ -17,9 +17,9 @@ from constant import *
 def step(data):
     gate = 0.025
     h = data['alt']
-    kernel = np.array([1/4,1/4,0,1/4,1/4])
+    kernel = np.array([1/2,0,1/2])
     h_hat = h - np.convolve(kernel, h, mode="same")
-    h_t = h_hat[2:-2]
+    h_t = h_hat[1:-1]
     idxs = h_t[h_t<gate][h_t>-gate].index
     # idxs = idxs.append(h_hat[:2].index)
     # idxs = idxs.append(h_hat[-2:].index)
@@ -59,8 +59,8 @@ def iqr(data, win=20, mean=False):
     h = data['alt']
     if mean:
         h = h - h.rolling(win, min_periods=1, center=True).mean() 
-    #     q1 = h.quantile(0.25)
-    #     q3 = h.quantile(0.75)
+        # q1 = h.quantile(0.25)
+        # q3 = h.quantile(0.75)
     # else:
     q1 = h.rolling(4*win, min_periods=1, center=True).quantile(0.25)
     q3 = h.rolling(4*win, min_periods=1, center=True).quantile(0.75)
